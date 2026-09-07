@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 
-EXTRA_CONFIGS=(
-    "kitty"
-    "cava"
-    "fastfetch"
-)
+EXTRA_CONFIGS=()
 
 render_wallpaper_progress() {
     local current="$1"
@@ -53,7 +49,7 @@ install_wallpapers() {
     local wallpaper_dir
     wallpaper_dir=$(get_wallpaper_dir)
     local wallpaper_repo="https://github.com/ilyamiro/shell-wallpapers.git"
-    local clone_dir="${XDG_CACHE_HOME:-"$HOME/.cache"}/serpantinum-wallpapers"
+    local clone_dir="${XDG_CACHE_HOME:-"$HOME/.cache"}/kairo-wallpapers"
 
     mkdir -p "$wallpaper_dir"
 
@@ -229,204 +225,60 @@ EOF
 }
 
 deploy_package() {
-    local REPO_ROOT="$1"
-    local OLD_COMMIT="$2"
-    local NEW_COMMIT="$3"
-    local IS_REINSTALL="$4"
-    local INSTALL_STATE="$5"
-    shift 5
-    local COMPOSITORS=("$@")
+    local repo_root="$1"
+    local target_base="${XDG_DATA_HOME:-$HOME/.local/share}/kairo"
+    local bin_dir="${KAIRO_BIN_DIR:-$HOME/.local/bin}"
+    local config_base="${XDG_CONFIG_HOME:-$HOME/.config}"
+    local staged
 
-    local TARGET_BASE="$HOME/.local/share/serpantinum"
-    local BIN_DIR="$HOME/.local/bin"
-
-    local is_update=false
-    if [[ "$INSTALL_STATE" == "current" && "$IS_REINSTALL" != "true" ]]; then
-        is_update=true
+    # Stage a complete copy before replacing the installed shell.
+    mkdir -p "$(dirname "$target_base")" "$bin_dir"
+    staged=$(mktemp -d "${target_base}.install.XXXXXX") || return 1
+    if ! cp -a "$repo_root/bin" "$repo_root/src" "$repo_root/config" "$repo_root/compositors" "$staged/"; then
+        rm -rf "$staged"
+        return 1
     fi
-
-    local do_full_deploy=true
-
-    if [ "$IS_REINSTALL" != "true" ] && [ -n "$OLD_COMMIT" ] && [ "$OLD_COMMIT" != "unknown" ] && [ -d "$REPO_ROOT/.git" ]; then
-        if git -C "$REPO_ROOT" cat-file -e "$OLD_COMMIT" 2>/dev/null; then
-            do_full_deploy=false
-        fi
+    cp "$repo_root/version.txt" "$staged/src/version.txt"
+    cp "$repo_root/LICENSE.md" "$repo_root/UPSTREAM.md" "$repo_root/CHANGELOG.md" "$repo_root/README.md" "$staged/src/"
+    cp "$repo_root/install/uninstall.sh" "$staged/uninstall.sh"
+    chmod +x "$staged/bin/kairo" "$staged/bin/kairod" "$staged/uninstall.sh"
+    find "$staged/src" -type f \( -name '*.sh' -o -name '*.py' \) -exec chmod +x {} +
+    # A marker distinguishes our managed installation from arbitrary user data.
+    printf 'Kairo managed installation\n' > "$staged/.kairo-install"
+    if [ -e "$target_base" ] && [ ! -f "$target_base/.kairo-install" ] && [ ! -f "$target_base/bin/kairod" ]; then
+        echo "Kairo: refusing to replace an unmanaged directory: $target_base" >&2
+        rm -rf "$staged"
+        return 1
     fi
-
-    if [ "$do_full_deploy" = true ]; then
-        rm -rf "$TARGET_BASE"
-        mkdir -p "$TARGET_BASE/bin" "$TARGET_BASE/src" "$BIN_DIR"
-
-        if [ -d "$REPO_ROOT/bin" ] && [ "$(ls -A "$REPO_ROOT/bin" 2>/dev/null)" ]; then
-            cp -r "$REPO_ROOT/bin/." "$TARGET_BASE/bin/"
-            chmod +x "$TARGET_BASE/bin/"* 2>/dev/null || true
+    for name in kairo kairod; do
+        if [ -e "$bin_dir/$name" ] || [ -L "$bin_dir/$name" ]; then
+            if [ ! -L "$bin_dir/$name" ] || [ "$(readlink "$bin_dir/$name")" != "$target_base/bin/$name" ]; then
+                echo "Kairo: launcher already exists outside this installation: $bin_dir/$name" >&2
+                rm -rf "$staged"
+                return 1
+            fi
         fi
+    done
+    rm -rf "$target_base"
+    mv "$staged" "$target_base"
+    for name in kairo kairod; do
+        ln -sf "$target_base/bin/$name" "$bin_dir/$name"
+    done
 
-        if [ -d "$REPO_ROOT/src" ] && [ "$(ls -A "$REPO_ROOT/src" 2>/dev/null)" ]; then
-            cp -r "$REPO_ROOT/src/." "$TARGET_BASE/src/"
-            find "$TARGET_BASE/src/scripts" -type f -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
+    local data_base="${XDG_DATA_HOME:-$HOME/.local/share}"
+    mkdir -p "$data_base/applications" "$data_base/icons/hicolor/scalable/apps"
+    ln -sf "$target_base/src/assets/applications/kairo.desktop" "$data_base/applications/kairo.desktop"
+    ln -sf "$target_base/src/assets/kairo-logo.svg" "$data_base/icons/hicolor/scalable/apps/kairo.svg"
+
+    # Optional example integration; never prune unrelated user configuration.
+    if [ "${COPY_HYPRLAND:-false}" = true ]; then
+        local dest="$config_base/hypr"
+        if [ -d "$dest" ]; then
+            local backup="$config_base/hypr_backup/backup_$(date +%Y%m%d_%H%M%S)"
+            mkdir -p "$backup"
+            cp -a "$dest/." "$backup/"
         fi
-
-        if [ "$is_update" != "true" ]; then
-            for cfg in "${EXTRA_CONFIGS[@]}"; do
-                local src_cfg="$REPO_ROOT/config/$cfg"
-                local dest_cfg="$HOME/.config/$cfg"
-                if [ -d "$src_cfg" ]; then
-                    mkdir -p "$dest_cfg"
-                    cp -r "$src_cfg/." "$dest_cfg/"
-                elif [ -f "$src_cfg" ]; then
-                    mkdir -p "$(dirname "$dest_cfg")"
-                    cp "$src_cfg" "$dest_cfg"
-                fi
-            done
-        fi
-
-        if [ "$is_update" != "true" ]; then
-            for comp in "${COMPOSITORS[@]}"; do
-                local target_config_name
-                case "$comp" in
-                    hyprland) target_config_name="hypr" ;;
-                    niri) target_config_name="niri" ;;
-                    sway) target_config_name="sway" ;;
-                    *) target_config_name="$comp" ;;
-                esac
-
-                local TARGET_CONFIG_DIR="$HOME/.config/$target_config_name"
-                local BACKUP_BASE="$HOME/.config/${target_config_name}_backup"
-                local BACKUP_DIR="$BACKUP_BASE/backup_$(date +%Y%m%d_%H%M%S)"
-
-                local SRC_COMP_DIR=""
-                if [ -d "$REPO_ROOT/compositors/$comp" ] && [ "$(ls -A "$REPO_ROOT/compositors/$comp" 2>/dev/null)" ]; then
-                    SRC_COMP_DIR="$REPO_ROOT/compositors/$comp"
-                elif [ -d "$REPO_ROOT/compositor/$comp" ] && [ "$(ls -A "$REPO_ROOT/compositor/$comp" 2>/dev/null)" ]; then
-                    SRC_COMP_DIR="$REPO_ROOT/compositor/$comp"
-                fi
-
-                if [ -n "$SRC_COMP_DIR" ]; then
-                    if [ -d "$TARGET_CONFIG_DIR" ] && [ "$(ls -A "$TARGET_CONFIG_DIR" 2>/dev/null)" ]; then
-                        mkdir -p "$BACKUP_DIR"
-                        cp -a "$TARGET_CONFIG_DIR/." "$BACKUP_DIR/" 2>/dev/null || true
-                    fi
-
-                    mkdir -p "$TARGET_CONFIG_DIR"
-                    cp -r "$SRC_COMP_DIR/." "$TARGET_CONFIG_DIR/"
-
-                    find "$TARGET_CONFIG_DIR" -type f -o -type l | while IFS= read -r dest_file; do
-                        local rel_path="${dest_file#$TARGET_CONFIG_DIR/}"
-                        if [ ! -e "$SRC_COMP_DIR/$rel_path" ] && [ ! -L "$SRC_COMP_DIR/$rel_path" ]; then
-                            rm -f "$dest_file"
-                        fi
-                    done
-
-                    find "$TARGET_CONFIG_DIR" -depth -type d -empty ! -path "$TARGET_CONFIG_DIR" -delete 2>/dev/null || true
-                fi
-            done
-        fi
-    else
-        mkdir -p "$TARGET_BASE/bin" "$TARGET_BASE/src" "$BIN_DIR"
-
-        local changed_files=""
-        local deleted_files=""
-
-        if [ "$OLD_COMMIT" != "$NEW_COMMIT" ]; then
-            changed_files=$(git -C "$REPO_ROOT" diff --name-only --no-renames --diff-filter=AM "$OLD_COMMIT" "$NEW_COMMIT" 2>/dev/null || true)
-            deleted_files=$(git -C "$REPO_ROOT" diff --name-only --no-renames --diff-filter=D "$OLD_COMMIT" "$NEW_COMMIT" 2>/dev/null || true)
-        fi
-
-        if [ -n "$deleted_files" ]; then
-            while IFS= read -r file; do
-                [[ -z "$file" ]] && continue
-                if [[ "$file" == bin/* ]]; then
-                    rm -f "$TARGET_BASE/$file"
-                elif [[ "$file" == src/* ]]; then
-                    rm -f "$TARGET_BASE/$file"
-                elif [[ "$file" == config/* ]]; then
-                    if [ "$is_update" != "true" ]; then
-                        local rel_cfg="${file#config/}"
-                        local cfg_name="${rel_cfg%%/*}"
-                        for cfg in "${EXTRA_CONFIGS[@]}"; do
-                            if [[ "$cfg" == "$cfg_name" ]]; then
-                                rm -f "$HOME/.config/$rel_cfg"
-                            fi
-                        done
-                    fi
-                elif [[ "$file" == compositors/* || "$file" == compositor/* ]]; then
-                    if [ "$is_update" != "true" ]; then
-                        local comp_part="${file#compositor*/}"
-                        local comp_name="${comp_part%%/*}"
-                        local comp_file="${comp_part#*/}"
-                        for comp in "${COMPOSITORS[@]}"; do
-                            if [[ "$comp" == "$comp_name" ]]; then
-                                local target_config_name
-                                case "$comp" in
-                                    hyprland) target_config_name="hypr" ;;
-                                    niri) target_config_name="niri" ;;
-                                    sway) target_config_name="sway" ;;
-                                    *) target_config_name="$comp" ;;
-                                esac
-                                rm -f "$HOME/.config/$target_config_name/$comp_file"
-                            fi
-                        done
-                    fi
-                fi
-            done <<< "$deleted_files"
-        fi
-
-        if [ -n "$changed_files" ]; then
-            while IFS= read -r file; do
-                [[ -z "$file" ]] && continue
-                if [[ "$file" == bin/* ]]; then
-                    mkdir -p "$(dirname "$TARGET_BASE/$file")"
-                    cp "$REPO_ROOT/$file" "$TARGET_BASE/$file"
-                    chmod +x "$TARGET_BASE/$file" 2>/dev/null || true
-                elif [[ "$file" == src/* ]]; then
-                    mkdir -p "$(dirname "$TARGET_BASE/$file")"
-                    cp "$REPO_ROOT/$file" "$TARGET_BASE/$file"
-                    if [[ "$file" == *.sh ]]; then
-                        chmod +x "$TARGET_BASE/$file" 2>/dev/null || true
-                    fi
-                elif [[ "$file" == config/* ]]; then
-                    if [ "$is_update" != "true" ]; then
-                        local rel_cfg="${file#config/}"
-                        local cfg_name="${rel_cfg%%/*}"
-                        for cfg in "${EXTRA_CONFIGS[@]}"; do
-                            if [[ "$cfg" == "$cfg_name" ]]; then
-                                mkdir -p "$(dirname "$HOME/.config/$rel_cfg")"
-                                cp "$REPO_ROOT/$file" "$HOME/.config/$rel_cfg"
-                            fi
-                        done
-                    fi
-                elif [[ "$file" == compositors/* || "$file" == compositor/* ]]; then
-                    if [ "$is_update" != "true" ]; then
-                        local comp_part="${file#compositor*/}"
-                        local comp_name="${comp_part%%/*}"
-                        local comp_file="${comp_part#*/}"
-                        for comp in "${COMPOSITORS[@]}"; do
-                            if [[ "$comp" == "$comp_name" ]]; then
-                                local target_config_name
-                                case "$comp" in
-                                    hyprland) target_config_name="hypr" ;;
-                                    niri) target_config_name="niri" ;;
-                                    sway) target_config_name="sway" ;;
-                                    *) target_config_name="$comp" ;;
-                                esac
-                                mkdir -p "$(dirname "$HOME/.config/$target_config_name/$comp_file")"
-                                cp "$REPO_ROOT/$file" "$HOME/.config/$target_config_name/$comp_file"
-                            fi
-                        done
-                    fi
-                fi
-            done <<< "$changed_files"
-        fi
-    fi
-
-    if [ -f "$TARGET_BASE/bin/serpantinum" ]; then
-        ln -sf "$TARGET_BASE/bin/serpantinum" "$BIN_DIR/serpantinum"
-        sudo ln -sf "$TARGET_BASE/bin/serpantinum" /usr/local/bin/serpantinum 2>/dev/null || true
-    fi
-
-    if [ -f "$TARGET_BASE/bin/serpantinumd" ]; then
-        ln -sf "$TARGET_BASE/bin/serpantinumd" "$BIN_DIR/serpantinumd"
-        sudo ln -sf "$TARGET_BASE/bin/serpantinumd" /usr/local/bin/serpantinumd 2>/dev/null || true
+        mkdir -p "$dest"
+        cp -a "$repo_root/compositors/hyprland/." "$dest/"
     fi
 }
