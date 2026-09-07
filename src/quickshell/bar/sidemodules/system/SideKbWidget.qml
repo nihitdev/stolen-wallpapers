@@ -22,14 +22,7 @@ Rectangle {
     property real targetY: 0
     property bool showLayout: false
     property alias kbPill: kbBtn
-    property bool isNiri: false
-    property bool isSway: false
 
-    Component.onCompleted: {
-        let de = SystemInfo.desktopEnv ? SystemInfo.desktopEnv.toLowerCase() : "";
-        sideKbRoot.isNiri = de.indexOf("niri") !== -1;
-        sideKbRoot.isSway = de.indexOf("sway") !== -1;
-    }
 
     onModuleActiveChanged: {
         if (!moduleActive) {
@@ -47,11 +40,7 @@ Rectangle {
         command: [
             "bash",
             "-c",
-            sideKbRoot.isNiri
-                ? "layout=$(niri msg -j keyboard-layouts 2>/dev/null | jq -r '.names[.current_idx] // empty' | head -n1); [[ -z \"$layout\" || \"$layout\" == \"null\" ]] && layout=\"US\"; echo \"${layout:0:2}\" | tr '[:lower:]' '[:upper:]'"
-                : (sideKbRoot.isSway
-                    ? "layout=$(swaymsg -t get_inputs 2>/dev/null | jq -r '[.[] | select(.type == \"keyboard\" and .xkb_active_layout_name != null)] | .[0].xkb_active_layout_name // empty' | head -n1); [[ -z \"$layout\" || \"$layout\" == \"null\" ]] && layout=\"US\"; echo \"${layout:0:2}\" | tr '[:lower:]' '[:upper:]'"
-                    : "layout=$(LC_ALL=C hyprctl devices -j 2>/dev/null | jq -r '(.keyboards[] | select(.main == true) | .active_keymap) // .keyboards[0].active_keymap // empty' | head -n1); [[ -z \"$layout\" || \"$layout\" == \"null\" ]] && layout=\"US\"; echo \"${layout:0:2}\" | tr '[:lower:]' '[:upper:]'")
+            "layout=$(LC_ALL=C hyprctl devices -j 2>/dev/null | jq -r '(.keyboards[] | select(.main == true) | .active_keymap) // .keyboards[0].active_keymap // empty' | head -n1); [[ -z \"$layout\" || \"$layout\" == \"null\" ]] && layout=\"US\"; echo \"${layout:0:2}\" | tr '[:lower:]' '[:upper:]'"
         ]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -69,7 +58,7 @@ Rectangle {
         command: [
             "bash",
             Caching.qsDir + "/watchers/kb_wait.sh",
-            sideKbRoot.isNiri ? "niri" : (sideKbRoot.isSway ? "sway" : "hyprland")
+            "hyprland"
         ]
         onExited: {
             kbPoller.running = false;
@@ -121,13 +110,8 @@ Rectangle {
         textColor: isHoveredOrHighlighted ? ThemeBackend.text : (sideKbRoot.isCompact ? Qt.lighter(ThemeBackend.text, 1.05) : ThemeBackend.text)
 
         onClicked: {
-            if (sideKbRoot.isNiri) {
-                Quickshell.execDetached(["niri", "msg", "action", "switch-layout", "next"]);
-            } else if (sideKbRoot.isSway) {
-                Quickshell.execDetached(["swaymsg", "input", "type:keyboard", "xkb_switch_layout", "next"]);
-            } else {
-                Quickshell.execDetached(["hyprctl", "switchxkblayout", "main", "next"]);
-            }
+            Quickshell.execDetached(["hyprctl", "switchxkblayout", "main", "next"]);
+
         }
     }
 }
