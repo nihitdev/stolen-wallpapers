@@ -1505,7 +1505,7 @@ PanelWindow {
     function performQrScan() {
         Quickshell.execDetached(["bash", "-c", "rm -f " + Caching.getRunDir("screenshot") + "/qr_result"]);
         root.isScanningQr = true; root.showQrPopup = false; qrModel.clear();
-        let cmd = `bash ${Caching.serpantinumDir}/scripts/screenshot.sh --geometry "${root.geometryString}" --scan-qr`;
+        let cmd = `bash ${Caching.kairoDir}/scripts/screenshot.sh --geometry "${root.geometryString}" --scan-qr`;
         Quickshell.execDetached(["bash", "-c", cmd]);
         qrWaitTimer.start();
     }   
@@ -1521,7 +1521,7 @@ PanelWindow {
     }
 
     function executeCapture(openEditor, isRecord) {
-        let cmd = `bash ${Caching.serpantinumDir}/scripts/screenshot.sh --geometry "${root.geometryString}"`;
+        let cmd = `bash ${Caching.kairoDir}/scripts/screenshot.sh --geometry "${root.geometryString}"`;
         if (isRecord) {
             if (root.targetMonitorName !== "") cmd += ` --monitor "${root.targetMonitorName}"`;
             cmd += " --record";

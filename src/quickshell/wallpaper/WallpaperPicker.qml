@@ -19,7 +19,7 @@ Item {
         return Scaler.s(val);
     }
 
-    readonly property string scriptDir: Caching.serpantinumDir + "/scripts/wallpaper"
+    readonly property string scriptDir: Caching.kairoDir + "/scripts/wallpaper"
 
     property string widgetArg: ""
     property string targetWallName: ""
@@ -143,7 +143,7 @@ Item {
     Process {
         id: monitorDetector
         running: false
-        command: ["bash", Caching.serpantinumDir + "/scripts/monitors_detect.sh"]
+        command: ["bash", Caching.kairoDir + "/scripts/monitors_detect.sh"]
         stdout: StdioCollector {
             onStreamFinished: {
                 let lines = this.text.trim().split("\n").map(s => s.trim()).filter(s => s.length > 0);
@@ -692,7 +692,7 @@ Item {
             Caching.getCacheDir("wallpaper"),
             Caching.getRunDir("wallpaper"),
             Caching.logDir,
-            Caching.serpantinumDir + "/scripts/wallpaper/ddg_search.sh"
+            Caching.kairoDir + "/scripts/wallpaper/ddg_search.sh"
         ]);
         view.forceActiveFocus();
     }
