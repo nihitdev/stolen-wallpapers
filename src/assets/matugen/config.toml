@@ -2,8 +2,8 @@
 reload_apps = false
 
 [templates.quickshell]
-input_path = "templates/serpantinum_matugen_colors.json.template"
-output_path = "~/.local/state/serpantinum/qs_colors.json"
+input_path = "templates/kairo_matugen_colors.json.template"
+output_path = "~/.local/state/kairo/qs_colors.json"
 
 [templates.fastfetch]
 input_path = "templates/fastfetch.jsonc.template"
