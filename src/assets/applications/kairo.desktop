@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Kairo
+Comment=Arch, composed. — Hyprland shell settings
+Exec=kairo msg open guide
+Icon=kairo
+Terminal=false
+Categories=Settings;DesktopSettings;
+Keywords=Hyprland;Shell;
+StartupNotify=false
