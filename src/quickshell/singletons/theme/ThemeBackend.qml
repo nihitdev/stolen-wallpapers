@@ -24,9 +24,9 @@ Item {
     property color text: "#cdd6f4"
     property color subtext0: "#a6adc8"
     property color subtext1: "#bac2de"
-    property color surface0: "#313244"
-    property color surface1: "#45475a"
-    property color surface2: "#585b70"
+    property color surface0: "#181818"
+    property color surface1: "#262626"
+    property color surface2: "#404040"
     property color overlay0: "#6c7086"
     property color overlay1: "#7f849c"
     property color overlay2: "#9399b2"
@@ -41,8 +41,8 @@ Item {
     property color maroon: "#eba0ac"
     property color teal: "#94e2d5"
 
-    property string configPath: Quickshell.env("QS_COLORS_JSON") ?? "~/.local/state/serpantinum/qs_colors.json"
-    property string matugenConfigPath: (typeof Caching !== "undefined" && Caching.stateDir ? Caching.stateDir : ((Quickshell.env("HOME") ?? "") + "/.local/state/serpantinum")) + "/qs_matugen_colors.json"
+    property string configPath: Quickshell.env("QS_COLORS_JSON") ?? "~/.local/state/kairo/qs_colors.json"
+    property string matugenConfigPath: (typeof Caching !== "undefined" && Caching.stateDir ? Caching.stateDir : ((Quickshell.env("HOME") ?? "") + "/.local/state/kairo")) + "/qs_matugen_colors.json"
 
     property bool _readInProgress: false
     property var matugenColors: null
@@ -98,9 +98,9 @@ Item {
         property bool forceRescan: false
 
         command: {
-            let sys = Caching.serpantinumDir ? (Caching.serpantinumDir + "/assets/fonts") : "";
-            let usr = Caching.stateDir ? (Caching.stateDir + "/fonts") : (Caching.home + "/.local/state/serpantinum/fonts");
-            let cacheFile = Caching.stateDir ? (Caching.stateDir + "/fonts_cache.txt") : (Caching.home + "/.local/state/serpantinum/fonts_cache.txt");
+            let sys = Caching.kairoDir ? (Caching.kairoDir + "/assets/fonts") : "";
+            let usr = Caching.stateDir ? (Caching.stateDir + "/fonts") : (Caching.home + "/.local/state/kairo/fonts");
+            let cacheFile = Caching.stateDir ? (Caching.stateDir + "/fonts_cache.txt") : (Caching.home + "/.local/state/kairo/fonts_cache.txt");
             let force = forceRescan ? "true" : "false";
 
             let cmd = "CACHE=\"" + cacheFile + "\"; ";
