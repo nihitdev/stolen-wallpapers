@@ -2,7 +2,7 @@
 import sys, json, time, re, os
 import urllib.request, urllib.parse, http.cookiejar
 
-QS_RUN_WP = os.environ.get("QS_RUN_WALLPAPER", "/tmp/quickshell/wallpaper")
+QS_RUN_WP = os.environ.get("QS_RUN_WALLPAPER", os.path.join(os.environ.get("XDG_RUNTIME_DIR", f"/tmp/kairo-{os.getuid()}"), "kairo/wallpaper"))
 CONTROL_FILE = os.path.join(QS_RUN_WP, "ddg_search_control")
 
 def get_state():
