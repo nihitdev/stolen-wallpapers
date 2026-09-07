@@ -61,7 +61,7 @@ Item {
                 }
             }
         }
-        Quickshell.execDetached(["serpantinum", "ipc", "call", "main", "clearNotifications"]);
+        Quickshell.execDetached(["kairo", "ipc", "call", "main", "clearNotifications"]);
     }
 
     Timer {
@@ -222,7 +222,7 @@ Item {
                         size: root.emptyGraphicSize
                         cornerRadius: root.s(0)
                         imageRadius: root.s(0)
-                        source: Caching.serpantinumDir ? ("file://" + Caching.serpantinumDir + "/assets/pushy.gif") : Qt.resolvedUrl("../../assets/pushy.gif")
+                        source: Caching.kairoDir ? ("file://" + Caching.kairoDir + "/assets/pushy.gif") : Qt.resolvedUrl("../../assets/pushy.gif")
                         isGif: true
                         playing: true
                         fillMode: Image.PreserveAspectFit
@@ -293,7 +293,6 @@ Item {
                         let app = (appn || "").toLowerCase().trim();
                         if (app === "weather") return "weather";
                         if (app === "screenshot" || app === "screen recorder") return "screenshot";
-                        if (app === "update" || app === "updater" || app === "serpantinum updater") return "update";
                         return "default";
                     }
 
@@ -433,7 +432,6 @@ Item {
                             let app = appn.toLowerCase().trim();
                             if (app === "weather") return "../notifications/types/Weather.qml";
                             if (app === "screenshot" || app === "screen recorder") return "../notifications/types/Screenshot.qml";
-                            if (app === "update" || app === "updater" || app === "serpantinum updater") return "../notifications/types/Update.qml";
                             return "../notifications/types/Default.qml";
                         }
                         onLoaded: {
@@ -665,14 +663,7 @@ Item {
                                                     color: ThemeBackend.peach
                                                 }
 
-                                                Text {
-                                                    anchors.centerIn: parent
-                                                    visible: groupWrapper.customType === "update"
-                                                    text: "󰚰"
-                                                    font.family: ThemeBackend.fontFamily
-                                                    font.pixelSize: root.s(22)
-                                                    color: ThemeBackend.green
-                                                }
+
 
                                                 Image {
                                                     id: groupHeaderIcon
@@ -917,7 +908,6 @@ Item {
                                                     let app = appn.toLowerCase().trim();
                                                     if (app === "weather") return "../notifications/types/Weather.qml";
                                                     if (app === "screenshot" || app === "screen recorder") return "../notifications/types/Screenshot.qml";
-                                                    if (app === "update" || app === "updater" || app === "serpantinum updater") return "../notifications/types/Update.qml";
                                                     return "../notifications/types/Default.qml";
                                                 }
 

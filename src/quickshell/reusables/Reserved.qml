@@ -23,7 +23,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: root.imageSize
             Layout.preferredHeight: root.imageSize
-            source: root.imageSource !== "" ? root.imageSource : (Caching.serpantinumDir ? ("file://" + Caching.serpantinumDir + "/assets/pushy2.gif") : Qt.resolvedUrl("../assets/pushy2.gif"))
+            source: root.imageSource !== "" ? root.imageSource : (Caching.kairoDir ? ("file://" + Caching.kairoDir + "/assets/pushy2.gif") : Qt.resolvedUrl("../assets/pushy2.gif"))
             isGif: true
             playing: true
             fillMode: Image.PreserveAspectFit
