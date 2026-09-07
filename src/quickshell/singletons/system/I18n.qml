@@ -7,7 +7,7 @@ import "../../"
 Item {
     id: root
 
-    readonly property string i18nDir: Caching.serpantinumDir + "/assets/languages"
+    readonly property string i18nDir: Caching.kairoDir + "/assets/languages"
     property string currentLang: "en"
     property var translations: ({})
     property bool isReady: false

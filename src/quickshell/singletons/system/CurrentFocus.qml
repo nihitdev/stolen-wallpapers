@@ -14,8 +14,8 @@ Item {
 
     Process {
         id: focusDaemon
-        command: ["bash", "-c", Caching.serpantinumDir + "/scripts/current_focus.sh"]
-        running: typeof Caching !== "undefined" && Caching.serpantinumDir !== undefined && Caching.serpantinumDir !== ""
+        command: ["bash", "-c", Caching.kairoDir + "/scripts/current_focus.sh"]
+        running: typeof Caching !== "undefined" && Caching.kairoDir !== undefined && Caching.kairoDir !== ""
     }
 
     FileView {
