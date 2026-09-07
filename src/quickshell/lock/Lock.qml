@@ -20,8 +20,6 @@ Scope {
     property string freezeTimestamp: ""
     property bool isUnlocking: false
 
-    property bool isNiri: false
-    property bool isSway: false
     property string kbLayout: "US"
     property int connectedScreenCount: 1
 
@@ -39,11 +37,7 @@ Scope {
         return ThemeBackend.text;
     }
 
-    function updateDeInfo() {
-        let de = SystemInfo.desktopEnv ? SystemInfo.desktopEnv.toLowerCase() : "";
-        root.isNiri = de.indexOf("niri") !== -1;
-        root.isSway = de.indexOf("sway") !== -1;
-    }
+
 
     function updateScreenCount() {
         root.connectedScreenCount = Quickshell.screens ? Quickshell.screens.length : 1;
@@ -51,7 +45,6 @@ Scope {
 
     Component.onCompleted: {
         SystemInfo.fetch();
-        root.updateDeInfo();
         root.updateScreenCount();
     }
 
@@ -63,14 +56,8 @@ Scope {
     }
 
     function switchKbLayout() {
-        root.updateDeInfo();
-        if (root.isNiri) {
-            Quickshell.execDetached(["niri", "msg", "action", "switch-layout", "next"]);
-        } else if (root.isSway) {
-            Quickshell.execDetached(["swaymsg", "input", "type:keyboard", "xkb_switch_layout", "next"]);
-        } else {
-            Quickshell.execDetached(["hyprctl", "switchxkblayout", "main", "next"]);
-        }
+        Quickshell.execDetached(["hyprctl", "switchxkblayout", "main", "next"]);
+
     }
 
     Timer {
@@ -90,11 +77,7 @@ Scope {
         command: [
             "bash",
             "-c",
-            root.isNiri
-                ? "layout=$(niri msg -j keyboard-layouts 2>/dev/null | jq -r '.names[.current_idx] // empty' | head -n1); [[ -z \"$layout\" || \"$layout\" == \"null\" ]] && layout=\"US\"; echo \"${layout:0:2}\" | tr '[:lower:]' '[:upper:]'"
-                : (root.isSway
-                    ? "layout=$(swaymsg -t get_inputs 2>/dev/null | jq -r '[.[] | select(.type == \"keyboard\" and .xkb_active_layout_name != null)] | .[0].xkb_active_layout_name // empty' | head -n1); [[ -z \"$layout\" || \"$layout\" == \"null\" ]] && layout=\"US\"; echo \"${layout:0:2}\" | tr '[:lower:]' '[:upper:]'"
-                    : "layout=$(LC_ALL=C hyprctl devices -j 2>/dev/null | jq -r '(.keyboards[] | select(.main == true) | .active_keymap) // .keyboards[0].active_keymap // empty' | head -n1); [[ -z \"$layout\" || \"$layout\" == \"null\" ]] && layout=\"US\"; echo \"${layout:0:2}\" | tr '[:lower:]' '[:upper:]'")
+            "layout=$(LC_ALL=C hyprctl devices -j 2>/dev/null | jq -r '(.keyboards[] | select(.main == true) | .active_keymap) // .keyboards[0].active_keymap // empty' | head -n1); [[ -z \"$layout\" || \"$layout\" == \"null\" ]] && layout=\"US\"; echo \"${layout:0:2}\" | tr '[:lower:]' '[:upper:]'"
         ]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -111,7 +94,7 @@ Scope {
         command: [
             "bash",
             Caching.qsDir + "/watchers/kb_wait.sh",
-            root.isNiri ? "niri" : (root.isSway ? "sway" : "hyprland")
+            "hyprland"
         ]
         onExited: {
             kbPoller.running = false;
@@ -185,7 +168,6 @@ Scope {
     function doLock() {
         grimTimeoutTimer.stop();
         SystemInfo.fetch();
-        root.updateDeInfo();
         root.updateScreenCount();
         root.isUnlocking = false;
         lockUI.failed = false;
@@ -261,10 +243,9 @@ Scope {
 
     Process {
         id: suspendProcess
-        command: ["bash", Caching.serpantinumDir + "/scripts/system/suspend.sh"]
+        command: ["bash", Caching.kairoDir + "/scripts/system/suspend.sh"]
         onExited: {
             SystemInfo.fetch();
-            root.updateDeInfo();
             pamActionTimer.restart();
             kbPollerRestartTimer.restart();
             if (rootLock.locked) {
@@ -275,12 +256,12 @@ Scope {
 
     Process {
         id: poweroffProcess
-        command: ["bash", Caching.serpantinumDir + "/scripts/system/poweroff.sh"]
+        command: ["bash", Caching.kairoDir + "/scripts/system/poweroff.sh"]
     }
 
     Process {
         id: reloadProcess
-        command: ["bash", Caching.serpantinumDir + "/scripts/system/reboot.sh"]
+        command: ["bash", Caching.kairoDir + "/scripts/system/reboot.sh"]
     }
 
     WlSessionLock {

@@ -8,12 +8,6 @@ import "../"
 Item {
     id: idleRoot
 
-    property bool isNiri: {
-        let de = (typeof SystemInfo !== "undefined" && SystemInfo.desktopEnv) ? SystemInfo.desktopEnv.toLowerCase() : "";
-        if (de.indexOf("niri") !== -1) return true;
-        let xdg = (typeof Quickshell !== "undefined" && Quickshell.env) ? (Quickshell.env("XDG_CURRENT_DESKTOP") || "") : "";
-        return xdg.toLowerCase().indexOf("niri") !== -1;
-    }
 
     property var defaultIdleSettings: ({
         "enabled": false,
@@ -190,7 +184,7 @@ Item {
     }
 
     function lockSession() {
-        Quickshell.execDetached(["bash", Caching.serpantinumDir + "/scripts/lock.sh"]);
+        Quickshell.execDetached(["bash", Caching.kairoDir + "/scripts/lock.sh"]);
     }
 
     function performLock() {
@@ -199,19 +193,13 @@ Item {
     }
 
     function dpmsOff() {
-        if (idleRoot.isNiri) {
-            Quickshell.execDetached(["niri", "msg", "action", "power-off-monitors"]);
-        } else {
-            Quickshell.execDetached(["sh", "-c", "hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })' 2>/dev/null || hyprctl dispatch 'hl.dsp.dpms({ action = \"off\" })' 2>/dev/null || hyprctl dispatch dpms off"]);
-        }
+        Quickshell.execDetached(["sh", "-c", "hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })' 2>/dev/null || hyprctl dispatch 'hl.dsp.dpms({ action = \"off\" })' 2>/dev/null || hyprctl dispatch dpms off"]);
+
     }
 
     function dpmsOn() {
-        if (idleRoot.isNiri) {
-            Quickshell.execDetached(["niri", "msg", "action", "power-on-monitors"]);
-        } else {
-            Quickshell.execDetached(["sh", "-c", "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })' 2>/dev/null || hyprctl dispatch 'hl.dsp.dpms({ action = \"on\" })' 2>/dev/null || hyprctl dispatch dpms on"]);
-        }
+        Quickshell.execDetached(["sh", "-c", "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })' 2>/dev/null || hyprctl dispatch 'hl.dsp.dpms({ action = \"on\" })' 2>/dev/null || hyprctl dispatch dpms on"]);
+
     }
 
     function teardownVisualStates() {
