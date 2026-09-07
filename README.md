@@ -1,191 +1,51 @@
-<div align="center">
-  <a href="https://ko-fi.com/ilyamiro">
-    <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" />
-  </a>
-</div>
+# Kairo Shell
 
-<div align="center">
-  <img src="docs/assets/banner.png" alt="Serpantinum" width="850" />
-</div>
+Kairo is a Hyprland-only desktop shell built with Quickshell/QML, Bash, and Python. It is a modified fork of Serpantinum; see [upstream credits](UPSTREAM.md) and the unchanged [AGPL license](LICENSE.md).
 
-## Previews
+Kairo is currently a local source build. It is **not published on Nixpkgs, the AUR, or another package registry**, and no hosted installer or automatic release-update endpoint is configured.
 
-| | |
-|---|---|
-| ![Preview 1](docs/assets/previews/preview_1.png) | ![Preview 2](docs/assets/previews/preview_2.png) |
-| ![Preview 3](docs/assets/previews/preview_3.png) | ![Preview 4](docs/assets/previews/preview_4.png) |
+## Install from this checkout
 
----
-
-## Installation
-
-> [!IMPORTANT]
-> **Migrating from v1:** All previous configuration will be backed up and unused. Configuration of compositor settings such as monitors, keybinds, and autostart is now up to you, as the project migrated from being dotfiles to being a shell.
-
-### Arch Linux and its derivatives
-
-For Arch-based distributions (including systemd, OpenRC, and other init systems), run the automated installation script.:
+On Arch Linux and derivatives, from the repository root:
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/ilyamiro/serpantinum/master/install/install.sh)"
-
+bash install/install.sh
 ```
 
-> [!NOTE]
-> To update, when or if you recieve a notification about the new version being available, just run the script again and choose "update"
+The interactive installer installs dependencies and copies this working tree to `~/.local/share/kairo`, with `kairo` and `kairod` launchers in `~/.local/bin` (and `/usr/local/bin` when permitted). It can back up and install Hyprland configuration and optional system/theme configuration; review its selections before installing. To update, obtain/review source changes and rerun this local installer. Uncommitted source changes are included.
 
----
-
-### NixOS
-
-Serpantinum provides flake outputs, a NixOS module for system dependencies, and a Home Manager module for user configuration and service management.
-
-#### 1. Add Flake Input
-
-Add Serpantinum to your `flake.nix`:
-
-```nix
-{
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    serpantinum.url = "github:ilyamiro/serpantinum";
-  };
-
-  outputs = { self, nixpkgs, serpantinum, ... }: {
-    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      specialArgs = { inherit serpantinum; };
-      modules = [
-        ./configuration.nix
-        serpantinum.nixosModules.default
-      ];
-    };
-  };
-}
-
-```
-
-#### 2. configuration.nix
-
-Enable the NixOS module to configure system prerequisites:
-
-```nix
-{
-  programs.serpantinum.enable = true;
-}
-
-```
-
-If you prefer installing the package directly without the system module:
-
-```nix
-{ pkgs, serpantinum, ... }:
-
-{
-  environment.systemPackages = [
-    serpantinum.packages.${pkgs.stdenv.hostPlatform.system}.default
-  ];
-}
-
-```
-
-#### 3. Home Manager Configuration
-
-```nix
-{ serpantinum, ... }:
-
-{
-  imports = [
-    serpantinum.homeManagerModules.default
-  ];
-
-  programs.serpantinum = {
-    enable = true;
-    systemd.enable = true;
-
-    settings = {
-      wallpaperDir = "/home/username/Pictures/Wallpapers";
-
-      general = {
-        language = "en";
-        weatherUnit = "metric";
-        weatherInterval = 30;
-      };
-
-      bar = {
-        position = "top";
-        style = "solid";
-        width = 40;
-        workspaceCount = 10;
-        modules = {
-          left = [ "workspaces" ];
-          center = [ "time" ];
-          right = [ "tray" [ "kb" "wifi" "bt" "vol" "bat" ] ];
-        };
-      };
-
-      theme = {
-        fontFamily = "Adwaita Mono";
-        borderRadius = 12;
-        matugen = true;
-      };
-
-      notifications = {
-        dnd = false;
-        position = "top right";
-        sound = true;
-      };
-    };
-  };
-}
-
-```
-
-#### 4. Updating
-
-Update the flake lockfile and rebuild your system:
+The existing Nix files are local build recipes, not publication claims:
 
 ```bash
-nix flake update serpantinum
-sudo nixos-rebuild switch --flake .
-
+nix build "path:$PWD"
+nix run "path:$PWD" -- --help
 ```
 
-> **Note:** The automatic installer handles compositor integration on standard distributions. On NixOS / Home Manager, you must manually integrate compositor configs.
-> Sample configs, autostart entries, and keybindings for supported window managers and compositors are available in the [compositors](https://github.com/ilyamiro/serpantinum/tree/master/compositors) directory.
+Local flake outputs include `packages.<system>.kairo`, `apps.<system>.kairod`, `homeManagerModules.kairo`, and `nixosModules.kairo`. The modules expose `programs.kairo`. Point a consumer flake input at `path:/absolute/path/to/kairo-shell` to use them. New files must be included when copying the source; `path:` avoids Git flake filtering of untracked renamed files during review.
 
+## Hyprland integration and commands
 
-#### Required autostart
+Review the [Hyprland configuration](compositors/hyprland) for autostart, clipboard listeners, and keybindings. Keep your monitor/keybinding preferences. Start the shell with:
 
-Remember to add clipboard listeners and required services to your compositor's autostart configuration for the clipboard and the equalizer to work properly.
-
-Example on Hyprland:
-
-```lua
-hl.on("hyprland.start", function()
-  hl.exec_cmd("wl-paste --type text --watch cliphist store")
-  hl.exec_cmd("wl-paste --type image --watch cliphist store")
-  hl.exec_cmd("systemctl --user enable --now easyeffects")
-end)
-
+```bash
+kairod start
+kairod status
+kairod stop
+kairo --help
+kairo --version
+kairo launch start
+kairo launch widgetredactor
+kairo msg workspace 1
+kairo msg workspace 2 move
+kairo msg open network wifi
+kairo msg toggle launcher
+kairo msg close
+kairo ipc call main handleCommand toggle launcher ""
+kairo kill
 ```
----
 
-## Running
+Use `kairo launch --help`, `kairo msg --help`, `kairo ipc --help`, and `kairod --help` for the implemented command groups. Public script commands are `exit`, `lock`, `volume`, `reload`, `weather`, `location`, `screenshot`, `brightness`, `current_focus`, `monitors_detect`, `location_manual`, and `blue_light_filter`.
 
-To run the shell, launch `serpantinumd start`
+Configuration is stored in `~/.config/kairo/settings.json`, caches in `~/.cache/kairo`, state in `~/.local/state/kairo`, runtime files in `$XDG_RUNTIME_DIR/kairo` (fallback `/tmp/kairo`), and daemon PID/lock files in `/tmp/kairod.pid` and `/tmp/kairod.lock`. The exported IPC socket path is `$XDG_RUNTIME_DIR/kairo.sock` (fallback `/tmp/kairo.sock`); commands use Quickshell IPC. Existing upstream user configuration is not automatically moved or deleted.
 
----
-
-## Credits
-
-* Special thanks to Darkall44/Qylock for providing a gorgeous material SDDM theme!
-
----
-
-## License
-
-Copyright (C) 2026 Illia Miroshnichenko
-
-This project is licensed under the GNU Affero General Public License version 3, or (at your option) any later version. See the [LICENSE.md](LICENSE.md) file for the full license text.
-
+Existing functional artwork is temporary. See [the asset replacement list](UPSTREAM.md).
