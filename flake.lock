@@ -19,10 +19,10 @@
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
-        "serpantinum-wallpapers": "serpantinum-wallpapers"
+        "kairo-wallpapers": "kairo-wallpapers"
       }
     },
-    "serpantinum-wallpapers": {
+    "kairo-wallpapers": {
       "flake": false,
       "locked": {
         "lastModified": 1787675697,

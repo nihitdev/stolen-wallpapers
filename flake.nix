@@ -1,16 +1,16 @@
 {
-  description = "Serpantinum - a desktop shell built for YOU.";
+  description = "Kairo — Arch, composed. A Hyprland desktop shell.";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    serpantinum-wallpapers = {
+    kairo-wallpapers = {
       url = "github:ilyamiro/shell-wallpapers";
       flake = false;
     };
   };
 
-  outputs = { self, nixpkgs, serpantinum-wallpapers, ... }:
+  outputs = { self, nixpkgs, kairo-wallpapers, ... }:
     let
       supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
@@ -18,7 +18,7 @@
     in
     {
       overlays.default = final: _prev: {
-        serpantinum = final.callPackage ./nix/package.nix {
+        kairo = final.callPackage ./nix/package.nix {
           rev = self.rev or self.dirtyRev or "dirty";
         };
       };
@@ -29,17 +29,17 @@
           default = pkgs.callPackage ./nix/package.nix {
             rev = self.rev or self.dirtyRev or "dirty";
           };
-          serpantinum = self.packages.${system}.default;
+          kairo = self.packages.${system}.default;
         });
 
       apps = forAllSystems (system: {
         default = {
           type = "app";
-          program = "${self.packages.${system}.default}/bin/serpantinum";
+          program = "${self.packages.${system}.default}/bin/kairo";
         };
-        serpantinumd = {
+        kairod = {
           type = "app";
-          program = "${self.packages.${system}.default}/bin/serpantinumd";
+          program = "${self.packages.${system}.default}/bin/kairod";
         };
       });
 
@@ -54,12 +54,12 @@
 
       homeManagerModules.default = import ./nix/hm-module.nix {
         inherit self;
-        wallpapers = serpantinum-wallpapers;
+        wallpapers = kairo-wallpapers;
       };
-      homeManagerModules.serpantinum = self.homeManagerModules.default;
+      homeManagerModules.kairo = self.homeManagerModules.default;
 
       nixosModules.default = import ./nix/nixos-module.nix;
-      nixosModules.serpantinum = self.nixosModules.default;
+      nixosModules.kairo = self.nixosModules.default;
 
       formatter = forAllSystems (system: (pkgsFor system).nixpkgs-fmt);
     };
