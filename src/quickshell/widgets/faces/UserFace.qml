@@ -70,7 +70,7 @@ Item {
                         textFontSize: Scaler.s(12)
                         accentColor: ThemeBackend.surface1
                         textColor: ThemeBackend.text
-                        onClicked: Quickshell.execDetached(["bash", "-c", Caching.serpantinumDir + "/scripts/qs_manager.sh toggle guide"])
+                        onClicked: Quickshell.execDetached(["bash", "-c", Caching.kairoDir + "/scripts/qs_manager.sh toggle guide"])
                     }
 
                     ClickButton {
@@ -87,7 +87,7 @@ Item {
                         textColor: ThemeBackend.mauve
 
                         onClicked: {
-                            Quickshell.execDetached(["bash", Caching.serpantinumDir + "/scripts/lock.sh"]);
+                            Quickshell.execDetached(["bash", Caching.kairoDir + "/scripts/lock.sh"]);
                         }
                     }
                 }
@@ -323,7 +323,7 @@ Item {
                                     Sounds.stopSfx(actionCapsule.chargingSoundHandle);
                                     actionCapsule.chargingSoundHandle = -1;
                                 }
-                                let scriptPath = Caching.serpantinumDir + "/scripts/system/" + (cmd === "sleep" ? "suspend.sh" : cmd + ".sh");
+                                let scriptPath = Caching.kairoDir + "/scripts/system/" + (cmd === "sleep" ? "suspend.sh" : cmd + ".sh");
                                 Quickshell.execDetached(["bash", scriptPath]);
                                 actionCapsule.fillLevel = 0.0;
                                 actionCapsule.triggered = false;

@@ -1,4 +1,5 @@
-source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/caching.sh" 2>/dev/null || true
+#!/usr/bin/env bash
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../../scripts/caching.sh" 2>/dev/null || true
 
 ACTION=${1:-get}
 
