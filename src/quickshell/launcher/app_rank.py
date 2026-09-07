@@ -10,7 +10,7 @@ LAUNCH_SECONDS_PER_EVENT = 90
 RETENTION_DAYS = 60
 
 def get_stats_dir():
-    stats_dir = os.environ.get("QS_STATE_APPLAUNCHER", os.path.expanduser("~/.local/state/quickshell/applauncher"))
+    stats_dir = os.environ.get("QS_STATE_APPLAUNCHER", os.path.expanduser("~/.local/state/kairo/applauncher"))
     os.makedirs(stats_dir, exist_ok=True)
     return stats_dir
 
@@ -52,7 +52,7 @@ def log_launch(app_name):
         pass
 
 def get_target_db():
-    db_dir = os.environ.get("QS_STATE_FOCUSTIME", os.path.expanduser("~/.local/state/quickshell/focustime"))
+    db_dir = os.environ.get("QS_STATE_FOCUSTIME", os.path.expanduser("~/.local/state/kairo/focustime"))
     db_path = os.path.join(db_dir, "focustime.db")
     old_db_path = os.path.expanduser("~/.local/share/focustime/focustime.db")
     if os.path.exists(db_path):
