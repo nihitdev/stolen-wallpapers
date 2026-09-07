@@ -55,7 +55,7 @@
 , ...
 }:
 let
-  pname = "serpantinum";
+  pname = "kairo";
   version = lib.strings.trim (builtins.readFile ../version.txt);
   pythonEnv = python3.withPackages (ps: [ ps.websockets ]);
   pathDeps = [
@@ -121,7 +121,7 @@ stdenv.mkDerivation (finalAttrs: {
   src = lib.fileset.toSource {
     root = ../.;
     fileset = lib.fileset.unions (
-      map (p: ../. + "/${p}") [ "bin" "src" "config" "compositors" "version.txt" ]
+      map (p: ../. + "/${p}") [ "bin" "src" "config" "compositors" "version.txt" "LICENSE.md" "UPSTREAM.md" "README.md" "CHANGELOG.md" ]
     );
   };
   nativeBuildInputs = [ makeWrapper qt6.wrapQtAppsHook ];
@@ -136,27 +136,30 @@ stdenv.mkDerivation (finalAttrs: {
     cp -r config "$out/share/${finalAttrs.pname}/config"
     cp version.txt "$out/share/${finalAttrs.pname}/version.txt"
     find "$out/share/${finalAttrs.pname}" -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod +x {} +
-    install -Dm755 bin/serpantinum  "$out/bin/.serpantinum-wrapped"
-    install -Dm755 bin/serpantinumd "$out/bin/.serpantinumd-wrapped"
+    cp LICENSE.md UPSTREAM.md README.md CHANGELOG.md "$out/share/${finalAttrs.pname}/"
+    install -Dm755 bin/kairo  "$out/bin/.kairo-wrapped"
+    install -Dm755 bin/kairod "$out/bin/.kairod-wrapped"
+    install -Dm644 src/assets/applications/kairo.desktop "$out/share/applications/kairo.desktop"
+    substituteInPlace "$out/share/applications/kairo.desktop" --replace-fail "Exec=kairo " "Exec=$out/bin/kairo "
+    install -Dm644 src/assets/kairo-logo.svg "$out/share/icons/hicolor/scalable/apps/kairo.svg"
     runHook postInstall
   '';
   postFixup = ''
-    for bin in serpantinum serpantinumd; do
+    for bin in kairo kairod; do
       makeWrapper "$out/bin/.$bin-wrapped" "$out/bin/$bin" \
         "''${qtWrapperArgs[@]}" \
         --prefix QML2_IMPORT_PATH : "${qmlImportPath}" \
         --prefix QT_PLUGIN_PATH : "${qtPluginPath}" \
-        --set SERPANTINUM_DIR "$out/share/${finalAttrs.pname}" \
-        --set SERPANTINUM_VERSION "${finalAttrs.version}" \
+        --set KAIRO_DIR "$out/share/${finalAttrs.pname}" \
+        --set KAIRO_VERSION "${finalAttrs.version}" \
         --prefix PATH : "${lib.makeBinPath pathDeps}"
     done
   '';
   passthru = { inherit pathDeps qtDeps pythonEnv; };
   meta = with lib; {
-    description = "A desktop shell built for YOU";
-    homepage = "https://github.com/ilyamiro/serpantinum";
-    license = licenses.mit;
+    description = "Kairo — a Hyprland desktop shell";
+    license = licenses.agpl3Only;
     platforms = platforms.linux;
-    mainProgram = "serpantinum";
+    mainProgram = "kairo";
   };
 })
