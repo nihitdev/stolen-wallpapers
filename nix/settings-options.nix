@@ -110,7 +110,7 @@ let
   monitorSubmodule = freeform {
     enabled = mkOpt types.bool "Whether this output is used by the shell.";
     scale = mkOpt (types.either types.int types.float) "Display scale factor.";
-    auto = mkOpt types.bool "Let Serpantinum auto-manage this output instead of using the fields above.";
+    auto = mkOpt types.bool "Let Kairo auto-manage this output instead of using the fields above.";
     temperature = mkOpt types.int "Colour-temperature override for this output (units depend on how src/scripts drives wl-gammarelay-rs - check there if unsure).";
   };
 
@@ -131,7 +131,7 @@ in
     notifications = mkOption { type = notificationsSubmodule; default = { }; };
     display = mkOption { type = displaySubmodule; default = { }; };
     wallpaperDir = mkOpt types.str ''
-      Directory Serpantinum reads wallpapers from.
+      Directory Kairo reads wallpapers from.
     '';
   };
 }
