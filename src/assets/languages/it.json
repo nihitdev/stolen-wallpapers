@@ -1,7 +1,7 @@
 {
   "guide": {
     "about": {
-      "title": "Serpantinum",
+      "title": "Kairo",
       "loading": "Caricamento...",
       "unknown": "Sconosciuto",
       "version_by": "v{version} • di {author}",
@@ -21,7 +21,7 @@
         "uptime": "Tempo di attività",
         "default_os": "Linux"
       },
-      "github_repo": "ilyamiro/serpantinum"
+      "github_repo": "Upstream credits"
     },
     "tabs": {
       "welcome": "Benvenuto/a",
@@ -337,7 +337,7 @@
     "theme": {
       "font": {
         "title": "Font",
-        "desc": "Scegli il font predefinito che Serpantinum userà",
+        "desc": "Scegli il font predefinito che Kairo userà",
         "select": "Seleziona..."
       },
       "radius": {
@@ -470,7 +470,6 @@
         "excluded_apps_desc": "Escludi le app dal tracciamento complessivo da ora in poi"
       }
     },
-    "update_available": "Aggiornamento disponibile",
     "osd": {
       "capslock": {
         "title": "Mostra con Blocco Maiuscole"
@@ -520,14 +519,6 @@
       "low_body": "La batteria è al {pct}%. Si prega di caricare il dispositivo.",
       "critical_title": "Livello batteria critico!",
       "critical_body": "La batteria è al {pct}%. Carica immediatamente il dispositivo."
-    }
-  },
-  "updater": {
-    "notification": {
-      "app_name": "Aggiorna",
-      "action_open_guide": "Apri guida",
-      "update_available_title": "Aggiornamento disponibile: v{remote}",
-      "update_available_body": "Versione corrente: v{local}. Clicca per vedere cosa è cambiato e per aggiornare."
     }
   },
   "polkit": {
@@ -723,11 +714,11 @@
     }
   },
   "start": {
-    "title": "Serpantinum",
+    "title": "Kairo",
     "made_by": "Fatto da @{author}",
     "welcome": "Benvenuto/a",
-    "tagline": "Una shell desktop creata per",
-    "you": "Te",
+    "tagline": "Arch, composed.",
+    "you": "",
     "start_preview": "Avvia Anteprima"
   },
   "syspanel": {
@@ -858,7 +849,7 @@
     },
     "guide": {
       "name": "Impostazioni",
-      "desc": "Impostazioni Serpantinum"
+      "desc": "Impostazioni Kairo"
     },
     "calendar": {
       "name": "Calendario e orologio",
@@ -906,7 +897,7 @@
     }
   },
   "cli": {
-    "usage": "Uso: serpantinum [comando] [opzioni...]",
+    "usage": "Uso: kairo [comando] [opzioni...]",
     "description": "Una shell desktop per compositor Wayland.",
     "commands": "Comandi:",
     "script_commands": "Comandi Script:",
@@ -919,23 +910,23 @@
     "version_desc": "Mostra le informazioni sulla versione ed esci",
     "help_desc": "Mostra questo messaggio di aiuto ed esci",
     "examples": "Esempi:",
-    "daemon_stopped": "Demone di Serpantinum arrestato",
-    "starting_daemon": "Demone non in esecuzione. Avvio di serpantinumd in background...",
+    "daemon_stopped": "Demone di Kairo arrestato",
+    "starting_daemon": "Demone non in esecuzione. Avvio di kairod in background...",
     "error_missing_qml": "Errore: target da avviare mancante.",
-    "launch_usage": "Uso: serpantinum launch <start|widgetredactor> [argomenti...]",
+    "launch_usage": "Uso: kairo launch <start|widgetredactor>",
     "error_qml_not_found": "Errore: impossibile trovare {NAME}.qml in {DIR}",
     "error_shell_qml_not_found": "Errore: impossibile trovare il percorso di shell.qml in {DIR}",
     "error_unknown_command": "Errore: comando sconosciuto '{CMD}'.",
     "error_unknown_target": "Errore: target sconosciuto '{TARGET}'.",
     "launch_help": {
-      "usage": "Uso: serpantinum launch <start|widgetredactor> [argomenti...]",
+      "usage": "Uso: kairo launch <start|widgetredactor>",
       "description": "Avvia componenti autonomi direttamente in modalità esecuzione.",
       "available_targets": "Target disponibili:",
       "target_start": "Avvia l'interfaccia di configurazione iniziale",
       "target_widgetredactor": "Avvia l'interfaccia dell'editor di widget desktop"
     },
     "msg_help": {
-      "usage": "Uso: serpantinum msg <comando|workspace> [argomenti...]",
+      "usage": "Uso: kairo msg <comando|workspace> [argomenti...]",
       "description": "Invia direttamente messaggi di gestione per layout, workspace e finestre.",
       "available_commands": "Messaggi disponibili:",
       "cmd_workspace": "Passa al workspace <num> (aggiungi 'move' per inviare la finestra attiva)",
@@ -944,7 +935,7 @@
       "cmd_close": "Chiude qualsiasi overlay attivo della shell"
     },
     "ipc_help": {
-      "usage": "Uso: serpantinum ipc call <target> <metodo> [argomenti...]",
+      "usage": "Uso: kairo ipc call <target> <metodo> [argomenti...]",
       "description": "Invia una chiamata IPC direttamente all'istanza quickshell in esecuzione."
     },
     "scripts": {
@@ -965,11 +956,11 @@
   },
   "daemon": {
     "already_running": "Il demone è già in esecuzione. Uscita...",
-    "shutting_down": "Arresto del demone serpantinum...",
-    "launching": "Avvio del demone serpantinum...",
+    "shutting_down": "Arresto del demone kairo...",
+    "launching": "Avvio del demone kairo...",
     "cli": {
-      "usage": "Uso: serpantinumd <comando> [opzioni...]",
-      "description": "Demone di servizio in background per la shell desktop serpantinum.",
+      "usage": "Uso: kairod <comando> [opzioni...]",
+      "description": "Demone di servizio in background per la shell desktop kairo.",
       "commands": "Comandi:",
       "cmd_start": "Avvia il servizio demone e i processi in background",
       "cmd_stop": "Arresta il servizio demone in esecuzione",
@@ -978,9 +969,9 @@
       "opt_verbose": "Attiva la registrazione dettagliata dell'output",
       "opt_version": "Mostra le informazioni sulla versione ed esce",
       "opt_help": "Mostra questo messaggio di aiuto ed esce",
-      "stopped": "Demone Serpantinum arrestato.",
-      "status_running": "Il demone Serpantinum è in esecuzione (PID: {PID}).",
-      "status_stopped": "Il demone Serpantinum non è in esecuzione.",
+      "stopped": "Demone Kairo arrestato.",
+      "status_running": "Il demone Kairo è in esecuzione (PID: {PID}).",
+      "status_stopped": "Il demone Kairo non è in esecuzione.",
       "unknown_arg": "Argomento sconosciuto: {ARG}"
     }
   },
@@ -995,7 +986,7 @@
     },
     "os": {
       "error_root": "Errore: Non eseguire questo script direttamente come root/sudo. Eseguilo come utente normale.",
-      "error_unsupported": "Sistema operativo non supportato ({os}). Serpantinum supporta esclusivamente Arch Linux e derivate.",
+      "error_unsupported": "Sistema operativo non supportato ({os}). Kairo supporta esclusivamente Arch Linux e derivate.",
       "error_not_found": "Impossibile rilevare il sistema operativo. /etc/os-release non trovato.",
       "unknown_cpu": "CPU sconosciuta",
       "unknown_gpu": "GPU sconosciuta / Macchina virtuale",
@@ -1040,7 +1031,6 @@
       "menu_overview": "Panoramica installazione pacchetti ({count} pacchetti base)",
       "menu_sddm": "Gestore accessi SDDM",
       "menu_wallpapers": "Pacchetto sfondi",
-      "menu_telemetry": "Telemetria anonima",
       "menu_update": "Aggiorna",
       "menu_reinstall": "Reinstalla",
       "menu_install": "Installa",
@@ -1051,9 +1041,9 @@
       "tagline": "Una shell desktop creata su misura per te",
       "support_creator": "Supporta il creatore:",
       "buy_coffee": "Se ti piace questo progetto, offrimi un caffè!",
-      "installed_success": "✔ Serpantinum {ver} ({commit}) installato con successo.",
+      "installed_success": "✔ Kairo {ver} ({commit}) installato con successo.",
       "failed_packages": "Si sono verificati errori durante l'installazione dei seguenti pacchetti:",
-      "restart_prompt": "Riavvia il compositor o esegui 'serpantinumd start' per iniziare.",
+      "restart_prompt": "Riavvia il compositor o esegui 'kairod start' per iniziare.",
       "ask_reboot": "Vuoi riavviare ora? [y/n] "
     },
     "deps": {
