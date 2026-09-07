@@ -9,12 +9,6 @@ Item {
 
     signal settingsChanged()
 
-    readonly property string compositor: {
-        let de = (typeof SystemInfo !== "undefined" && SystemInfo.desktopEnv) ? SystemInfo.desktopEnv.toLowerCase() : "";
-        if (de.indexOf("niri") !== -1) return "niri";
-        if (de.indexOf("sway") !== -1) return "sway";
-        return "hyprland";
-    }
 
     property var defaultDisplaySettings: ({ "monitors": {} })
     property var pendingTargets: ({})
@@ -101,8 +95,8 @@ Item {
         let keys = Object.keys(pendingTargets);
         if (keys.length === 0) return;
 
-        let scriptPath = (typeof Caching !== "undefined" && Caching.serpantinumDir)
-            ? Caching.serpantinumDir + "/scripts/blue_light_filter.sh"
+        let scriptPath = (typeof Caching !== "undefined" && Caching.kairoDir)
+            ? Caching.kairoDir + "/scripts/blue_light_filter.sh"
             : "";
 
         if (!scriptPath) {
