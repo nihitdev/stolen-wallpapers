@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Kairo Shell
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+
+      - name: Validate Bash syntax
+        run: |
+          find . -type f -name '*.sh' -print0 | xargs -0 -r -n1 bash -n
+          bash -n bin/kairo
+          bash -n bin/kairod
+
+      - name: Validate Python syntax
+        run: |
+          python - <<'PY'
+          import pathlib
+          import py_compile
+
+          for path in pathlib.Path(".").rglob("*.py"):
+              py_compile.compile(str(path), doraise=True)
+
+          print("Python syntax validation passed.")
+          PY
+
+      - name: Validate JSON
+        run: |
+          python - <<'PY'
+          import json
+          import pathlib
+
+          for path in pathlib.Path(".").rglob("*.json"):
+              with path.open(encoding="utf-8") as f:
+                  json.load(f)
+
+          print("JSON validation passed.")
+          PY
+
+      - name: Run migration regression tests
+        run: |
+          python -m pytest -q tests/test_migration.py
+
+      - name: Validate CLI
+        run: |
+          KAIRO_DIR="$PWD/src" ./bin/kairo --version
+          KAIRO_DIR="$PWD/src" ./bin/kairod --version
+
+      - name: Check Git diff
+        run: |
+          git diff --check
