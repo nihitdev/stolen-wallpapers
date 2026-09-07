@@ -1,0 +1,269 @@
+#!/usr/bin/env bash
+
+BIN_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+if [ -z "$KAIRO_DIR" ]; then
+    export KAIRO_DIR="$(dirname "$BIN_DIR")/src"
+fi
+
+source "$KAIRO_DIR/scripts/caching.sh"
+source "$KAIRO_DIR/scripts/config.sh"
+source "$KAIRO_DIR/scripts/i18n.sh"
+
+if [ -z "$MAIN_QML" ]; then
+    export MAIN_QML="$(find "$KAIRO_DIR/quickshell" -type f \( -name "Shell.qml" -o -name "Bar.qml" \) 2>/dev/null | head -n 1)"
+fi
+
+source "$KAIRO_DIR/scripts/daemon_common.sh"
+
+show_help() {
+    echo "$(t "cli.usage")"
+    echo ""
+    echo "Kairo — Arch, composed."
+    echo "A desktop shell for Hyprland."
+    echo ""
+    echo "$(t "cli.commands")"
+    echo "  launch <target>             $(t "cli.launch_desc")"
+    echo "  msg <action|workspace> ...  $(t "cli.msg_desc")"
+    echo "  ipc ...                      $(t "cli.ipc_desc")"
+    echo "  kill                         $(t "cli.kill_desc")"
+    echo ""
+    echo "$(t "cli.script_commands")"
+    echo "  exit                         $(t "cli.scripts.exit")"
+    echo "  lock                         $(t "cli.scripts.lock")"
+    echo "  volume                       $(t "cli.scripts.volume")"
+    echo "  reload                       $(t "cli.scripts.reload")"
+    echo "  weather                      $(t "cli.scripts.weather")"
+    echo "  location                     $(t "cli.scripts.location")"
+    echo "  screenshot                   $(t "cli.scripts.screenshot")"
+    echo "  brightness                   $(t "cli.scripts.brightness")"
+    echo "  current_focus                $(t "cli.scripts.current_focus")"
+    echo "  monitors_detect              $(t "cli.scripts.monitors_detect")"
+    echo "  location_manual              $(t "cli.scripts.location_manual")"
+    echo "  blue_light_filter            $(t "cli.scripts.blue_light_filter")"
+    echo ""
+    echo "$(t "cli.options")"
+    echo "  -v, --verbose                $(t "cli.verbose_desc")"
+    echo "  -V, --version                $(t "cli.version_desc")"
+    echo "  -h, --help                   $(t "cli.help_desc")"
+    echo ""
+    echo "$(t "cli.examples")"
+    echo "  kairo launch start"
+    echo "  kairo launch widgetredactor"
+    echo "  kairo msg workspace 1"
+    echo "  kairo msg workspace 2 move"
+    echo "  kairo msg open network wifi"
+    echo "  kairo msg toggle launcher"
+    echo "  kairo msg toggle clipboard"
+    echo "  kairo weather --current-temp"
+    echo "  kairo kill"
+    echo ""
+}
+
+show_launch_help() {
+    echo "$(t "cli.launch_help.usage")"
+    echo ""
+    echo "$(t "cli.launch_help.description")"
+    echo ""
+    echo "$(t "cli.launch_help.available_targets")"
+    echo "  start            $(t "cli.launch_help.target_start")"
+    echo "  widgetredactor  $(t "cli.launch_help.target_widgetredactor")"
+    echo ""
+    echo "$(t "cli.options")"
+    echo "  -h, --help      $(t "cli.help_desc")"
+    echo ""
+}
+
+show_msg_help() {
+    echo "$(t "cli.msg_help.usage")"
+    echo ""
+    echo "$(t "cli.msg_help.description")"
+    echo ""
+    echo "$(t "cli.msg_help.available_commands")"
+    echo "  workspace <num> [move]   $(t "cli.msg_help.cmd_workspace")"
+    echo "  open <target> [sub]      $(t "cli.msg_help.cmd_open")"
+    echo "  toggle <target> [sub]    $(t "cli.msg_help.cmd_toggle")"
+    echo "  close                    $(t "cli.msg_help.cmd_close")"
+    echo ""
+    echo "$(t "cli.options")"
+    echo "  -h, --help               $(t "cli.help_desc")"
+    echo ""
+}
+
+show_ipc_help() {
+    echo "$(t "cli.ipc_help.usage")"
+    echo ""
+    echo "$(t "cli.ipc_help.description")"
+    echo ""
+    echo "$(t "cli.options")"
+    echo "  -h, --help               $(t "cli.help_desc")"
+    echo ""
+}
+
+ensure_daemon() {
+    if kairo_daemon_pid >/dev/null; then return 0; fi
+    if [ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+        echo "Kairo requires a running Hyprland session." >&2
+        return 1
+    fi
+    "$BIN_DIR/kairod" start >> "$QS_LOG_DIR/kairod.log" 2>&1 &
+    local started=$!
+    for ((i=0; i<30; i++)); do
+        if kairo_daemon_pid >/dev/null; then return 0; fi
+        kill -0 "$started" 2>/dev/null || break
+        sleep 0.1
+    done
+    echo "Kairo: daemon failed to start; see $QS_LOG_DIR/kairod.log" >&2
+    return 1
+}
+
+VERBOSE=false
+
+while [[ "$1" == -* ]]; do
+    case "$1" in
+        -v|--verbose)
+            VERBOSE=true
+            export KAIRO_VERBOSE=true
+            shift
+            ;;
+        -V|--version)
+            echo "Kairo v$(get_installed_version)"
+            exit 0
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -eq 0 ]; then
+    show_help
+    exit 0
+fi
+
+if [[ "$1" == "kill" ]]; then
+    exec "$BIN_DIR/kairod" stop
+fi
+
+if [[ "$1" == "launch" ]]; then
+    if [[ "$2" == "-h" || "$2" == "--help" ]]; then
+        show_launch_help
+        exit 0
+    fi
+    if [ -z "$2" ]; then
+        echo "$(t "cli.error_missing_qml")"
+        echo "$(t "cli.launch_usage")"
+        exit 1
+    fi
+
+    TARGET="$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')"
+    case "$TARGET" in
+        start)
+            QML_NAME="Start"
+            ;;
+        widgetredactor)
+            QML_NAME="WidgetRedactor"
+            ;;
+        *)
+            echo "$(t "cli.error_unknown_target" TARGET="$2")"
+            show_launch_help
+            exit 1
+            ;;
+    esac
+
+    shift 2
+    if [ $# -gt 0 ]; then
+        echo "Kairo: launch targets do not accept arguments." >&2
+        exit 1
+    fi
+
+    QML_FILE=$(find "$KAIRO_DIR/quickshell" -type f -name "${QML_NAME}.qml" 2>/dev/null | head -n 1)
+
+    if [ -n "$QML_FILE" ]; then
+        ensure_daemon || exit 1
+        export KAIRO_TARGET_FILE="$QML_FILE"
+        exec quickshell -p "$KAIRO_DIR/quickshell/Runner.qml"
+    else
+        echo "$(t "cli.error_qml_not_found" NAME="${QML_NAME}" DIR="$KAIRO_DIR/quickshell/")"
+        exit 1
+    fi
+fi
+
+if [[ "$1" == "msg" ]]; then
+    if [[ "$2" == "-h" || "$2" == "--help" || -z "$2" ]]; then
+        show_msg_help
+        exit 0
+    fi
+    ensure_daemon || exit 1
+    shift
+    if [[ "$1" == "workspace" ]]; then
+        shift
+    fi
+    exec "$KAIRO_DIR/scripts/qs_manager.sh" "$@"
+fi
+
+if [[ "$1" == "ipc" ]]; then
+    if [[ -z "$2" || "$2" == "-h" || "$2" == "--help" ]]; then
+        show_ipc_help
+        exit 0
+    fi
+
+    ensure_daemon || exit 1
+
+    SHELL_QML=$(find "$KAIRO_DIR/quickshell" -type f -name "Shell.qml" 2>/dev/null | head -n 1)
+
+    if [ -z "$SHELL_QML" ] && [ -n "$MAIN_QML" ]; then
+        SHELL_QML="$MAIN_QML"
+    fi
+
+    if [ -z "$SHELL_QML" ]; then
+        echo "$(t "cli.error_shell_qml_not_found" DIR="$KAIRO_DIR/quickshell/")"
+        exit 1
+    fi
+
+    shift
+    exec quickshell -p "$SHELL_QML" ipc "$@"
+fi
+
+ALLOWED_SCRIPTS=(
+    "exit"
+    "lock"
+    "volume"
+    "reload"
+    "weather"
+    "location"
+    "screenshot"
+    "brightness"
+    "current_focus"
+    "monitors_detect"
+    "location_manual"
+    "blue_light_filter"
+)
+
+COMMAND="$1"
+IS_ALLOWED=false
+for s in "${ALLOWED_SCRIPTS[@]}"; do
+    if [[ "$COMMAND" == "$s" ]]; then
+        IS_ALLOWED=true
+        break
+    fi
+done
+
+SCRIPT_PATH="$KAIRO_DIR/scripts/${COMMAND}.sh"
+[[ "$COMMAND" == "exit" ]] && SCRIPT_PATH="$KAIRO_DIR/scripts/system/exit.sh"
+
+if [ "$IS_ALLOWED" = true ] && [ -f "$SCRIPT_PATH" ]; then
+    shift
+    if [ "$VERBOSE" = true ]; then
+        exec "$SCRIPT_PATH" --verbose "$@"
+    else
+        exec "$SCRIPT_PATH" "$@"
+    fi
+else
+    echo "$(t "cli.error_unknown_command" CMD="$COMMAND")"
+    show_help
+    exit 1
+fi
