@@ -1,0 +1,85 @@
+name: Bug report
+description: Report something that is not working correctly
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Kairo Shell.
+
+        Please provide enough information for the problem to be reproduced.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start Kairo...
+        2. Open...
+        3. Click...
+        4. Observe...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: input
+    id: kairo
+    attributes:
+      label: Kairo Shell version
+      placeholder: "kairo --version"
+    validations:
+      required: true
+
+  - type: input
+    id: hyprland
+    attributes:
+      label: Hyprland version
+      placeholder: "hyprctl version"
+
+  - type: input
+    id: quickshell
+    attributes:
+      label: Quickshell version
+
+  - type: input
+    id: distro
+    attributes:
+      label: Linux distribution
+      placeholder: "Arch Linux"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for duplicates.
+          required: true
+        - label: I removed passwords, tokens, and other sensitive information from logs.
+          required: true
