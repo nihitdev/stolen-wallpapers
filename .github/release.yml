@@ -1,0 +1,42 @@
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+
+  categories:
+    - title: "✨ Features"
+      labels:
+        - enhancement
+        - feature
+
+    - title: "🐛 Fixes"
+      labels:
+        - bug
+        - fix
+
+    - title: "🎨 UI and Themes"
+      labels:
+        - ui
+        - theme
+
+    - title: "📦 Packaging and Installation"
+      labels:
+        - packaging
+        - installer
+
+    - title: "📚 Documentation"
+      labels:
+        - documentation
+
+    - title: "🧪 Tests and CI"
+      labels:
+        - tests
+        - ci
+
+    - title: "⬆️ Dependencies"
+      labels:
+        - dependencies
+
+    - title: "🛠️ Maintenance"
+      labels:
+        - "*"
