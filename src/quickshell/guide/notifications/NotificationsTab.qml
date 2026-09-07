@@ -169,8 +169,8 @@ Item {
         id: soundsLoader
         running: false
         command: {
-            let assetsPath = Caching.serpantinumDir ? (Caching.serpantinumDir + "/assets/sounds/notifications") : (Caching.qsDir ? (Caching.qsDir + "/../assets/sounds/notifications") : "");
-            let userPath = Caching.stateDir ? (Caching.stateDir + "/sounds/notifications") : (Caching.home + "/.local/state/serpantinum/sounds/notifications");
+            let assetsPath = Caching.kairoDir ? (Caching.kairoDir + "/assets/sounds/notifications") : (Caching.qsDir ? (Caching.qsDir + "/../assets/sounds/notifications") : "");
+            let userPath = Caching.stateDir ? (Caching.stateDir + "/sounds/notifications") : (Caching.home + "/.local/state/kairo/sounds/notifications");
             let script =
                 "mkdir -p \"" + userPath + "\"; " +
                 "python3 -c '\n" +
@@ -229,7 +229,7 @@ Item {
 
     function installSound(filePath, fileName) {
         if (!filePath || filePath.trim() === "" || !fileName || fileName.trim() === "") return;
-        let userSoundsPath = Caching.stateDir ? (Caching.stateDir + "/sounds/notifications") : (Caching.home + "/.local/state/serpantinum/sounds/notifications");
+        let userSoundsPath = Caching.stateDir ? (Caching.stateDir + "/sounds/notifications") : (Caching.home + "/.local/state/kairo/sounds/notifications");
         let escapeBash = function(str) { return String(str).replace(/(["\\$`])/g, '\\$1'); };
 
         let script =
@@ -863,7 +863,7 @@ Item {
                                         accentColor: ThemeBackend.surface0
                                         textColor: isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.overlay2
                                         onClicked: {
-                                            let userSoundsPath = Caching.stateDir ? (Caching.stateDir + "/sounds/notifications") : (Caching.home + "/.local/state/serpantinum/sounds/notifications");
+                                            let userSoundsPath = Caching.stateDir ? (Caching.stateDir + "/sounds/notifications") : (Caching.home + "/.local/state/kairo/sounds/notifications");
                                             let escapeBash = function(str) { return String(str).replace(/(["\\$`])/g, '\\$1'); };
                                             Quickshell.execDetached(["bash", "-c", "mkdir -p \"" + escapeBash(userSoundsPath) + "\" && xdg-open \"" + escapeBash(userSoundsPath) + "\""]);
                                         }

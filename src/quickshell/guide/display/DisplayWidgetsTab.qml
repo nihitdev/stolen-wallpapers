@@ -85,7 +85,7 @@ Item {
         m[monName] = newList;
         displayWidgetsRoot.monitorWidgetsMap = m;
 
-        let mainTarget = Caching.mainQml || (Caching.serpantinumDir ? Caching.serpantinumDir + "/quickshell/Runner.qml" : "");
+        let mainTarget = Caching.mainQml || (Caching.kairoDir ? Caching.kairoDir + "/quickshell/Runner.qml" : "");
         if (mainTarget) {
             Quickshell.execDetached(["quickshell", "-p", mainTarget, "ipc", "call", "widgets-" + safeM, "remove", targetId]);
         } else {
@@ -102,7 +102,7 @@ Item {
     Process {
         id: screenDetector
         running: false
-        command: ["bash", "-c", "hyprctl monitors all -j 2>/dev/null || hyprctl monitors -j 2>/dev/null || niri msg -j outputs 2>/dev/null || swaymsg -t get_outputs -r 2>/dev/null || echo '[]'"]
+        command: ["bash", "-c", "hyprctl monitors all -j 2>/dev/null || hyprctl monitors -j 2>/dev/null || echo '[]'"]
         stdout: StdioCollector {
             onStreamFinished: {
                 let out = this.text;
@@ -187,14 +187,14 @@ Item {
     }
 
     function openRedactor(mon) {
-        let runnerTarget = Caching.serpantinumDir ? (Caching.serpantinumDir + "/quickshell/Runner.qml") : "";
-        let redactorTarget = Caching.widgetRedactor || (Caching.serpantinumDir ? Caching.serpantinumDir + "/quickshell/widgets/WidgetRedactor.qml" : Caching.mainQml);
-        let launchCmd = "{ mkdir -p '" + Caching.runDir + "' && printf '%s' '" + mon + "' > '" + Caching.runDir + "/redactor_target_monitor' && QS_WIDGET_MONITOR='" + mon + "' SERPANTINUM_TARGET_FILE='" + redactorTarget + "' quickshell -p '" + runnerTarget + "'; } >> /tmp/redactor_debug.log 2>&1";
+        let runnerTarget = Caching.kairoDir ? (Caching.kairoDir + "/quickshell/Runner.qml") : "";
+        let redactorTarget = Caching.widgetRedactor || (Caching.kairoDir ? Caching.kairoDir + "/quickshell/widgets/WidgetRedactor.qml" : Caching.mainQml);
+        let launchCmd = "{ mkdir -p '" + Caching.runDir + "' && printf '%s' '" + mon + "' > '" + Caching.runDir + "/redactor_target_monitor' && QS_WIDGET_MONITOR='" + mon + "' KAIRO_TARGET_FILE='" + redactorTarget + "' quickshell -p '" + runnerTarget + "'; } >> /tmp/redactor_debug.log 2>&1";
         Quickshell.execDetached(["bash", "-c", launchCmd]);
         if (rootObj && typeof rootObj.closePopup === "function") {
             rootObj.closePopup();
         } else {
-            Quickshell.execDetached(["bash", Caching.serpantinumDir + "/scripts/qs_manager.sh", "close"]);
+            Quickshell.execDetached(["bash", Caching.kairoDir + "/scripts/qs_manager.sh", "close"]);
         }
     }
 
