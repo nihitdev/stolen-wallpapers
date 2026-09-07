@@ -2,38 +2,43 @@
 
 set -e
 
-setterm -blank 0 -powerdown 0 2>/dev/null || true
-printf '\033[9;0]' 2>/dev/null || true
-
-RAW_SLUG="${REPO_SLUG:-ilyamiro/serpantinum}"
-REPO_SLUG="$(printf '%s' "$RAW_SLUG" | tr -d '\r\n\t ' | sed 's/[^a-zA-Z0-9_\/-]//g')"
-CACHE_BASE="${XDG_CACHE_HOME:-$HOME/.cache}/serpantinum-installer"
-export REPO_SLUG
-
-if [ -n "${BASH_SOURCE[0]}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
-    INSTALL_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
-    PROJECT_ROOT="$(dirname "$INSTALL_DIR")"
-else
-    INSTALL_DIR=""
-    PROJECT_ROOT=""
+COPY_HYPRLAND=false
+LOCAL_ONLY=false
+DRY_RUN=false
+for arg in "$@"; do
+    case "$arg" in
+        --local) LOCAL_ONLY=true ;;
+        --dry-run) DRY_RUN=true ;;
+        --integrate-hyprland) COPY_HYPRLAND=true ;;
+        -h|--help)
+            echo "Kairo — Arch, composed."
+            echo "Usage: bash install/install.sh [--local] [--dry-run] [--integrate-hyprland]"
+            echo "Default: interactive Arch dependency installation and local shell deployment."
+            echo "--local: deploy only; dependencies must already be installed."
+            echo "--dry-run: print destinations without writing or contacting the network."
+            echo "--integrate-hyprland: back up and copy bundled Hyprland examples (optional)."
+            exit 0 ;;
+        *) echo "Kairo: unknown installer option: $arg" >&2; exit 1 ;;
+    esac
+done
+if [ "$DRY_RUN" = true ]; then
+    printf 'Kairo install from %s\n' "$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
+    printf 'Application: %s/kairo\n' "${XDG_DATA_HOME:-$HOME/.local/share}"
+    printf 'Launchers: %s/{kairo,kairod}\n' "${KAIRO_BIN_DIR:-$HOME/.local/bin}"
+    printf 'Settings: %s/kairo/settings.json\n' "${XDG_CONFIG_HOME:-$HOME/.config}"
+    printf 'Copy Hyprland examples: %s\nLocal only: %s\n' "$COPY_HYPRLAND" "$LOCAL_ONLY"
+    exit 0
 fi
 
-if [[ -z "$PROJECT_ROOT" || ! -f "$PROJECT_ROOT/install/modules/deps.sh" || ! -d "$PROJECT_ROOT/src" ]]; then
-    command -v git &>/dev/null || sudo pacman -Sy --noconfirm --needed git
-    if [ ! -d "$CACHE_BASE/.git" ]; then
-        rm -rf "$CACHE_BASE"
-        mkdir -p "$CACHE_BASE"
-        git clone "https://github.com/${REPO_SLUG}.git" "$CACHE_BASE"
-    else
-        git -C "$CACHE_BASE" remote set-url origin "https://github.com/${REPO_SLUG}.git" 2>/dev/null || true
-        git -C "$CACHE_BASE" fetch origin 2>/dev/null || true
-        git -C "$CACHE_BASE" reset --hard origin/HEAD 2>/dev/null || git -C "$CACHE_BASE" reset --hard origin/main 2>/dev/null || git -C "$CACHE_BASE" reset --hard origin/master 2>/dev/null || true
-    fi
-    INSTALL_DIR="$CACHE_BASE/install"
-    PROJECT_ROOT="$CACHE_BASE"
+# Kairo is installed from this checkout; no published repository is assumed.
+INSTALL_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+PROJECT_ROOT="$(dirname "$INSTALL_DIR")"
+if [[ ! -f "$PROJECT_ROOT/install/modules/deps.sh" || ! -d "$PROJECT_ROOT/src" ]]; then
+    echo "Run bash install/install.sh from a complete Kairo Shell checkout." >&2
+    exit 1
 fi
 
-export SERPANTINUM_DIR="$PROJECT_ROOT/src"
+export KAIRO_DIR="$PROJECT_ROOT/src"
 export I18N_DIR="$PROJECT_ROOT/src/assets/languages"
 
 MODULES_DIR="$INSTALL_DIR/modules"
@@ -41,59 +46,59 @@ MODULES_DIR="$INSTALL_DIR/modules"
 source "$PROJECT_ROOT/src/scripts/i18n.sh"
 source "$MODULES_DIR/deps.sh"
 source "$MODULES_DIR/state.sh"
-source "$MODULES_DIR/migrate.sh"
 source "$MODULES_DIR/deploy.sh"
 source "$MODULES_DIR/version.sh"
 source "$MODULES_DIR/config.sh"
 source "$MODULES_DIR/service.sh"
-source "$MODULES_DIR/ui.sh"
+if [ "$LOCAL_ONLY" != true ]; then
+    source "$MODULES_DIR/ui.sh"
+else
+    IS_REINSTALL=false
+    SELECTED_COMPOSITORS=("hyprland")
+fi
 
-TELEMETRY_ID=$(get_telemetry_id)
-ENABLE_TELEMETRY=$(get_telemetry_enabled)
 
-check_supported_os
-bootstrap_installer_deps
+if [ "$LOCAL_ONLY" != true ]; then
+    check_supported_os
+    bootstrap_installer_deps
+fi
 
 INSTALL_STATE=$(detect_install_state)
 OLD_VERSION=$(get_installed_version)
-TARGET_VERSION=$(get_target_version "$PROJECT_ROOT" "$REPO_SLUG")
-TARGET_COMMIT=$(get_target_commit "$PROJECT_ROOT" "$REPO_SLUG")
+TARGET_VERSION=$(get_target_version "$PROJECT_ROOT")
+TARGET_COMMIT=$(get_target_commit "$PROJECT_ROOT")
 OLD_COMMIT=$(get_installed_commit)
 
-init_compositor_detection
-run_installer_ui
+if [ "$LOCAL_ONLY" != true ]; then run_installer_ui; fi
 
-TARGET_VERSION=$(get_target_version "$PROJECT_ROOT" "$REPO_SLUG")
-TARGET_COMMIT=$(get_target_commit "$PROJECT_ROOT" "$REPO_SLUG")
+TARGET_VERSION=$(get_target_version "$PROJECT_ROOT")
+TARGET_COMMIT=$(get_target_commit "$PROJECT_ROOT")
 
-if [ "$ENABLE_TELEMETRY" = true ] && [ -f "$MODULES_DIR/telemetry.sh" ]; then
-    bash "$MODULES_DIR/telemetry.sh" --mode init --version "$TARGET_VERSION" --id "$TELEMETRY_ID" --enabled "$ENABLE_TELEMETRY"
+
+if [ "$LOCAL_ONLY" != true ]; then
+    install_dependencies
+    [ ${#FAILED_PKGS[@]} -eq 0 ] || { echo "Kairo: dependency installation failed." >&2; exit 1; }
 fi
-
-if [[ "$INSTALL_STATE" == "legacy" ]]; then
-    migrate_legacy "${SELECTED_COMPOSITORS[@]}"
-elif [[ "$INSTALL_STATE" == "fresh" || "$IS_REINSTALL" == true ]]; then
-    backup_compositors "${SELECTED_COMPOSITORS[@]}"
-fi
-
-install_dependencies "${SELECTED_COMPOSITORS[@]}"
 
 deploy_package "$PROJECT_ROOT" "$OLD_COMMIT" "$TARGET_COMMIT" "$IS_REINSTALL" "$INSTALL_STATE" "${SELECTED_COMPOSITORS[@]}"
-setup_sddm "$PROJECT_ROOT"
-install_wallpapers "$INSTALL_FULL_WALLPAPERS"
+if [ "$LOCAL_ONLY" != true ]; then
+    setup_sddm "$PROJECT_ROOT"
+    install_wallpapers "$INSTALL_FULL_WALLPAPERS"
+fi
 
 WALLPAPER_DIR=$(get_wallpaper_dir)
-init_serpantinum_config "$PROJECT_ROOT" "$WALLPAPER_DIR" "$INSTALL_STATE" "$IS_REINSTALL"
+init_kairo_config "$PROJECT_ROOT" "$WALLPAPER_DIR" "$INSTALL_STATE" "$IS_REINSTALL"
 
-setup_services
-write_version_state "$TARGET_VERSION" "$TARGET_COMMIT" "$TELEMETRY_ID" "$ENABLE_TELEMETRY" "${SELECTED_COMPOSITORS[*]}"
+if [ "$LOCAL_ONLY" != true ]; then setup_services; fi
+write_version_state "$TARGET_VERSION" "$TARGET_COMMIT"
 
-if [[ "$INSTALL_STATE" == "legacy" || "$INSTALL_STATE" == "fresh" || "$IS_REINSTALL" == true ]]; then
-    rm -f "$HOME/.local/state/serpantinum/first_launch.done" "$HOME/.local/state/quickshell/first_launch.done"
+if [[ "$INSTALL_STATE" == "fresh" || "$IS_REINSTALL" == true ]]; then
+    rm -f "${XDG_STATE_HOME:-$HOME/.local/state}/kairo/first_launch.done"
 fi
 
-if [ -f "$MODULES_DIR/telemetry.sh" ]; then
-    bash "$MODULES_DIR/telemetry.sh" --mode done --version "$TARGET_VERSION" --old-version "$OLD_VERSION" --install-state "$INSTALL_STATE" --compositor "${SELECTED_COMPOSITORS[*]}" --id "$TELEMETRY_ID" --enabled "$ENABLE_TELEMETRY" --failed "${FAILED_PKGS[*]}"
-fi
 
-draw_completion_screen "$TARGET_VERSION" "$TARGET_COMMIT"
+if [ "$LOCAL_ONLY" = true ]; then
+    echo "Kairo $TARGET_VERSION installed. Start it in Hyprland with kairod start."
+else
+    draw_completion_screen "$TARGET_VERSION" "$TARGET_COMMIT"
+fi
