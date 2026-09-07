@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 
-if [ -z "$SERPANTINUM_DIR" ]; then
+if [ -z "$KAIRO_DIR" ]; then
     SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
-    export SERPANTINUM_DIR="$(dirname "$SCRIPT_DIR")"
+    export KAIRO_DIR="$(dirname "$SCRIPT_DIR")"
 fi
 
-export QS_DIR="$SERPANTINUM_DIR/quickshell"
+export QS_DIR="$KAIRO_DIR/quickshell"
 export MAIN_QML="$QS_DIR/Shell.qml"
-export IPC_SOCKET="${XDG_RUNTIME_DIR:-/tmp}/serpantinum.sock"
 
-export QS_CACHE_DIR="$HOME/.cache/serpantinum"
-export QS_STATE_DIR="$HOME/.local/state/serpantinum"
-export QS_RUN_DIR="${XDG_RUNTIME_DIR:-/tmp}/serpantinum"
+export QS_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/kairo"
+export QS_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/kairo"
+export QS_RUN_DIR="${XDG_RUNTIME_DIR:-/tmp/kairo-$(id -u)}/kairo"
+export KAIRO_PID_FILE="$QS_RUN_DIR/kairod.pid"
+export KAIRO_LOCK_FILE="$QS_RUN_DIR/kairod.lock"
 export QS_LOG_DIR="$QS_RUN_DIR/logs"
-export QS_SETTINGS="$HOME/.config/serpantinum/settings.json"
+export QS_SETTINGS="${XDG_CONFIG_HOME:-$HOME/.config}/kairo/settings.json"
 
 [[ -d "$QS_LOG_DIR" && -d "$QS_CACHE_DIR" && -d "$QS_STATE_DIR" ]] || mkdir -p "$QS_CACHE_DIR" "$QS_STATE_DIR" "$QS_RUN_DIR" "$QS_LOG_DIR"
 
@@ -45,3 +46,5 @@ if [ -d "$QS_DIR" ]; then
 fi
 
 qs_ensure_cache "focustime"
+qs_ensure_cache "music"
+qs_ensure_cache "applauncher"

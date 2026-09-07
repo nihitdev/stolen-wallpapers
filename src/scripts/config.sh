@@ -2,7 +2,7 @@
 
 source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/caching.sh"
 
-CONFIG_SETTINGS_JSON="${QS_SETTINGS:-$HOME/.config/serpantinum/settings.json}"
+CONFIG_SETTINGS_JSON="${QS_SETTINGS:-$HOME/.config/kairo/settings.json}"
 
 _config_ensure_settings() {
     local dir
@@ -14,7 +14,10 @@ _config_ensure_settings() {
 get_setting() {
     local key="$1"
     local fallback="${2:-}"
-    _config_ensure_settings
+    if [ ! -s "$CONFIG_SETTINGS_JSON" ]; then
+        printf '%s' "$fallback"
+        return
+    fi
     local val
     val="$(jq -r --arg k "$key" 'if has($k) then .[$k] else "__MISSING__" end' "$CONFIG_SETTINGS_JSON" 2>/dev/null)"
     if [[ "$val" == "__MISSING__" || "$val" == "null" ]]; then

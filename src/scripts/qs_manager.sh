@@ -27,7 +27,6 @@ log_widget_launch() {
     [[ -z "$target" ]] && return
 
     local rank_script="$SCRIPT_DIR/../quickshell/launcher/app_rank.py"
-    [[ -f "$rank_script" ]] || rank_script="$HOME/.config/quickshell/launcher/app_rank.py"
 
     local app_name="$target"
     if command -v t &>/dev/null; then
@@ -84,22 +83,6 @@ if [[ "$ACTION" =~ ^[0-9]+$ ]]; then
         exit 0
     fi
 
-    DE="${XDG_CURRENT_DESKTOP:-${DESKTOP_SESSION:-}}"
-    DE="${DE,,}"
-
-    if [[ "$DE" == *"niri"* ]] || [[ -n "${NIRI_SOCKET:-}" ]]; then
-        if [[ "$TARGET" == "move" ]]; then
-            niri msg action move-window-to-workspace "$ACTION" >/dev/null 2>&1 &
-        else
-            niri msg action focus-workspace "$ACTION" >/dev/null 2>&1 &
-        fi
-    elif [[ "$DE" == *"sway"* ]] || [[ -n "${SWAYSOCK:-}" ]]; then
-        if [[ "$TARGET" == "move" ]]; then
-            swaymsg move container to workspace number "$ACTION" >/dev/null 2>&1 &
-        else
-            swaymsg workspace number "$ACTION" >/dev/null 2>&1 &
-        fi
-    else
         if [[ "$TARGET" == "move" ]]; then
             CMD='hl.dsp.window.move({ workspace = "'"$ACTION"'" })'
         else
@@ -107,7 +90,6 @@ if [[ "$ACTION" =~ ^[0-9]+$ ]]; then
         fi
         
         hyprctl dispatch "$CMD" >/dev/null 2>&1 &
-    fi
 
     send_qs_ipc "close" "" "" &
 
@@ -233,3 +215,6 @@ if [[ "$ACTION" == "open" || "$ACTION" == "toggle" ]]; then
     send_qs_ipc "$ACTION" "$TARGET" "$SUBTARGET"
     exit 0
 fi
+
+echo "Kairo: unknown message action: $ACTION" >&2
+exit 1

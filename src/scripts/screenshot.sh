@@ -125,15 +125,7 @@ get_active_monitor() {
             mon=$(hyprctl activeworkspace -j 2>/dev/null | jq -r '.monitor // empty' 2>/dev/null)
         fi
     fi
-    if [ -z "$mon" ] && command -v niri &>/dev/null; then
-        mon=$(niri msg -j focused-output 2>/dev/null | jq -r '.name // empty' 2>/dev/null)
-        if [ -z "$mon" ] || [ "$mon" = "null" ]; then
-            mon=$(niri msg -j outputs 2>/dev/null | jq -r 'to_entries[]? | select(.value.is_focused == true) | .value.name // .key' 2>/dev/null)
-        fi
-    fi
-    if [ -z "$mon" ] && command -v swaymsg &>/dev/null; then
-        mon=$(swaymsg -t get_outputs 2>/dev/null | jq -r '.[] | select(.focused == true) | .name' 2>/dev/null)
-    fi
+
     if [ -z "$mon" ] || [ "$mon" = "null" ]; then
         if [ -f "$SCRIPT_DIR/monitors_detect.sh" ]; then
             mon=$(bash "$SCRIPT_DIR/monitors_detect.sh" 2>/dev/null | head -n 1)
