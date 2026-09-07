@@ -147,7 +147,7 @@ Item {
                     anchors.centerIn: parent
                     width: rootObj.s(210)
                     height: rootObj.s(210)
-                    source: "file://" + rootObj.appPaths.serpantinumDir + "/assets/logo.svg"
+                    source: "file://" + rootObj.appPaths.kairoDir + "/assets/kairo-logo.svg"
                     sourceSize: Qt.size(width, height)
                     fillMode: Image.PreserveAspectFit
                     smooth: true
@@ -262,7 +262,7 @@ Item {
                 spacing: 0
 
                 property string mainTitle: I18n.t("guide.about.title")
-                property string verText: " v" + (Updater.localVersion !== "..." ? Updater.localVersion : (rootObj.dotsVersion !== "Loading..." && rootObj.dotsVersion !== I18n.t("guide.about.loading") ? rootObj.dotsVersion : "2.0.0"))
+                property string verText: " v" + (Version.localVersion !== "..." ? Version.localVersion : (rootObj.dotsVersion !== "Loading..." && rootObj.dotsVersion !== I18n.t("guide.about.loading") ? rootObj.dotsVersion : "2.0.0"))
                 property string fullText: mainTitle + verText
 
                 Repeater {
@@ -288,7 +288,7 @@ Item {
             }
 
             Text {
-                text: I18n.t("guide.welcome.by_author", { author: "ilyamiro" })
+                text: I18n.t("guide.welcome.by_author", { author: "nihitdev" })
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: rootObj.s(14)
                 color: ThemeBackend.subtext0

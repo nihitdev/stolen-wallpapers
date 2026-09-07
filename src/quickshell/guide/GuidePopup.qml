@@ -128,7 +128,6 @@ Item {
         introSidebar = 0.0;
         introContent = 0.0;
         startupSequence.restart();
-        Updater.checkUpdate();
     }
 
     Timer {
@@ -251,7 +250,7 @@ Item {
 
     FileView {
         id: tutorialWatcher
-        path: Caching.serpantinumDir ? (Caching.serpantinumDir + "/assets/tutorial.json") : ""
+        path: Caching.kairoDir ? (Caching.kairoDir + "/assets/tutorial.json") : ""
         onLoaded: {
             try {
                 let data = JSON.parse(text().trim());
@@ -333,7 +332,7 @@ Item {
             easing.type: Easing.InQuart
         }
         ScriptAction {
-            script: Quickshell.execDetached(["bash", Caching.serpantinumDir + "/scripts/qs_manager.sh", "close"])
+            script: Quickshell.execDetached(["bash", Caching.kairoDir + "/scripts/qs_manager.sh", "close"])
         }
     }
 
@@ -671,21 +670,7 @@ Item {
                         }
                     }
 
-                    ClickButton {
-                        visible: Updater.updateAvailable
-                        Layout.fillWidth: true
-                        implicitHeight: root.s(38)
-                        cornerRadius: ThemeBackend.borderRadius
-                        buttonText: I18n.t("guide.update_available")
-                        buttonIcon: "󰚰"
-                        iconFontSize: root.s(16)
-                        textFontSize: root.s(13)
-                        accentColor: ThemeBackend.green
-                        textColor: ThemeBackend.crust
-                        onClicked: {
-                            root.gotoTab("about");
-                        }
-                    }
+
                 }
             }
 

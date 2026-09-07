@@ -21,14 +21,6 @@ Item {
     transform: Translate { y: slideY }
     Behavior on opacity { NumberAnimation { duration: 250 } }
 
-    property real updateTransitionProgress: Updater.updateAvailable ? 1.0 : 0.0
-    Behavior on updateTransitionProgress {
-        NumberAnimation {
-            duration: 450
-            easing.type: Easing.OutQuint
-        }
-    }
-
     function activateTab() {
         if (typeof SystemInfo !== "undefined") {
             SystemInfo.fetch();
@@ -65,21 +57,18 @@ Item {
                 Layout.fillWidth: true
                 Layout.topMargin: rootObj.s(12)
                 Layout.bottomMargin: rootObj.s(8)
-                implicitHeight: Math.max(brandingContainer.implicitHeight, updatePanel.implicitHeight)
+                implicitHeight: brandingContainer.implicitHeight
 
                 readonly property real brandingW: rootObj.s(220)
-                readonly property real panelW: rootObj.s(275)
-                readonly property real gapW: rootObj.s(28)
 
                 readonly property real collapsedX: (width - brandingW) / 2
-                readonly property real expandedX: (width - (brandingW + gapW + panelW)) / 2
 
                 Item {
                     id: brandingContainer
                     width: headerArea.brandingW
                     implicitHeight: brandingCol.implicitHeight
                     anchors.verticalCenter: parent.verticalCenter
-                    x: headerArea.collapsedX + (headerArea.expandedX - headerArea.collapsedX) * aboutTabRoot.updateTransitionProgress
+                    x: headerArea.collapsedX
 
                     ColumnLayout {
                         id: brandingCol
@@ -99,7 +88,7 @@ Item {
 
                                 Image {
                                     anchors.fill: parent
-                                    source: "file://" + rootObj.appPaths.serpantinumDir + "/assets/logo.svg"
+                                    source: "file://" + rootObj.appPaths.kairoDir + "/assets/kairo-logo.svg"
                                     sourceSize: Qt.size(512, 512)
                                     fillMode: Image.PreserveAspectFit
                                     smooth: true
@@ -143,9 +132,17 @@ Item {
                             }
 
                             Text {
+                                text: "Arch, composed."
+                                font.family: ThemeBackend.fontFamily
+                                font.pixelSize: rootObj.s(13)
+                                color: ThemeBackend.subtext0
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+
+                            Text {
                                 text: I18n.t("guide.about.version_by", {
-                                    version: (Updater.localVersion !== "..." ? Updater.localVersion : (rootObj.dotsVersion !== "Loading..." && rootObj.dotsVersion !== I18n.t("guide.about.loading") ? rootObj.dotsVersion : "2.0.0")),
-                                    author: "@ilyamiro"
+                                    version: (Version.localVersion !== "..." ? Version.localVersion : (rootObj.dotsVersion !== "Loading..." && rootObj.dotsVersion !== I18n.t("guide.about.loading") ? rootObj.dotsVersion : "2.0.0")),
+                                    author: "@nihitdev"
                                 })
                                 font.family: ThemeBackend.fontFamily
                                 font.pixelSize: rootObj.s(13)
@@ -156,71 +153,7 @@ Item {
                     }
                 }
 
-                Item {
-                    id: updatePanel
-                    width: headerArea.panelW
-                    anchors.verticalCenter: parent.verticalCenter
-                    x: brandingContainer.x + brandingContainer.width + headerArea.gapW
-                    implicitHeight: updateCol.implicitHeight
-                    visible: opacity > 0.001
-                    opacity: aboutTabRoot.updateTransitionProgress
-                    transform: Translate { x: rootObj.s(16) * (1.0 - aboutTabRoot.updateTransitionProgress) }
 
-                    ColumnLayout {
-                        id: updateCol
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: rootObj.s(12)
-
-                        Text {
-                            Layout.alignment: Qt.AlignLeft
-                            Layout.bottomMargin: rootObj.s(4)
-                            text: "Update available v" + Updater.remoteVersion
-                            font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Bold
-                            font.pixelSize: rootObj.s(18)
-                            color: ThemeBackend.mauve
-                        }
-
-                        ClickButton {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: rootObj.s(36)
-                            horizontalPadding: rootObj.s(14)
-                            cornerRadius: ThemeBackend.borderRadius
-                            buttonText: "Changelog"
-                            textFontSize: rootObj.s(12)
-                            buttonIcon: "󰈙"
-                            iconFontSize: rootObj.s(16)
-                            accentColor: ThemeBackend.surface0
-                            textColor: ThemeBackend.text
-
-                            onTriggered: Quickshell.execDetached(["xdg-open", "https://github.com/ilyamiro/serpantinum/blob/master/CHANGELOG.md"])
-                        }
-
-                        FillButton {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: rootObj.s(38)
-                            buttonText: "Update"
-                            buttonIcon: "󰚰"
-                            accentColor: ThemeBackend.green
-                            baseColor: ThemeBackend.surface0
-                            hoverColor: Qt.alpha(ThemeBackend.green, 0.15)
-                            textColor: ThemeBackend.green
-                            filledTextColor: ThemeBackend.crust
-                            cornerRadius: ThemeBackend.borderRadius
-                            textFontSize: rootObj.s(12)
-                            iconFontSize: rootObj.s(16)
-                            fillDuration: 1200
-
-                            onTriggered: {
-                                let cmd = "if command -v kitty >/dev/null 2>&1; then kitty --hold bash -c 'eval \"$(curl -fsSL https://raw.githubusercontent.com/ilyamiro/serpantinum/master/install/install.sh)\"'; else ${TERM:-xterm} -hold -e bash -c 'eval \"$(curl -fsSL https://raw.githubusercontent.com/ilyamiro/serpantinum/master/install/install.sh)\"'; fi";
-                                Quickshell.execDetached(["bash", "-c", cmd]);
-                                Quickshell.execDetached(["bash", rootObj.appPaths.serpantinumDir + "/scripts/qs_manager.sh", "close"]);
-                            }
-                        }
-                    }
-                }
             }
 
             RowLayout {
@@ -394,7 +327,7 @@ Item {
                     accentColor: ThemeBackend.surface0
                     textColor: ThemeBackend.text
 
-                    onTriggered: Quickshell.execDetached(["xdg-open", "https://github.com/ilyamiro/serpantinum"])
+                    onTriggered: Quickshell.execDetached(["xdg-open", Caching.kairoDir + "/UPSTREAM.md"])
                 }
             }
         }
