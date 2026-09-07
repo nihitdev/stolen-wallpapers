@@ -16,7 +16,7 @@ import fcntl
 from datetime import date, datetime, timedelta
 from collections import defaultdict
 
-RUN_DIR = os.environ.get("QS_RUN_FOCUSTIME", "/tmp/quickshell/focustime")
+RUN_DIR = os.environ.get("QS_RUN_FOCUSTIME", os.path.join(os.environ.get("XDG_RUNTIME_DIR", f"/tmp/kairo-{os.getuid()}"), "kairo/focustime"))
 os.makedirs(RUN_DIR, exist_ok=True)
 
 LOCK_PATH = os.path.join(RUN_DIR, "focus_daemon.lock")
@@ -29,7 +29,7 @@ except (IOError, BlockingIOError):
 current_app_class = "Desktop"
 current_app_title = "Desktop"
 
-DB_DIR = os.environ.get("QS_STATE_FOCUSTIME", os.path.expanduser("~/.local/state/quickshell/focustime"))
+DB_DIR = os.environ.get("QS_STATE_FOCUSTIME", os.path.expanduser("~/.local/state/kairo/focustime"))
 os.makedirs(DB_DIR, exist_ok=True)
 DB_PATH = os.path.join(DB_DIR, "focustime.db")
 
@@ -44,26 +44,9 @@ if not os.path.exists(DB_PATH) and os.path.exists(OLD_DB_BASE):
         pass
 
 STATE_FILE = os.path.join(RUN_DIR, "focustime_state.json")
-CONFIG_PATH = os.environ.get("QS_SETTINGS", os.path.expanduser("~/.config/serpantinum/settings.json"))
+CONFIG_PATH = os.environ.get("QS_SETTINGS", os.path.expanduser("~/.config/kairo/settings.json"))
 
 SYSTEM_STATES = {"Desktop", "Locked", "Quickshell", "Unknown"}
-
-def detect_compositor():
-    if os.environ.get("NIRI_SOCKET"):
-        return "niri"
-    try:
-        if subprocess.run(['pgrep', '-x', 'niri'], capture_output=True).returncode == 0:
-            return "niri"
-    except Exception:
-        pass
-    if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
-        return "hyprland"
-    try:
-        if subprocess.run(['pgrep', '-x', 'Hyprland'], capture_output=True).returncode == 0:
-            return "hyprland"
-    except Exception:
-        pass
-    return "unknown"
 
 def resolve_app_name(app_class, raw_title):
     if not app_class or app_class in SYSTEM_STATES:
@@ -111,25 +94,6 @@ def get_active_window_hyprctl():
     except Exception:
         return "Unknown", "Unknown"
 
-def get_active_window_niri():
-    try:
-        output = subprocess.check_output(['niri', 'msg', '-j', 'focused-window'], text=True)
-        if not output.strip() or output.strip() == "null": return "Desktop", "Desktop"
-        data = json.loads(output)
-        
-        app_cls = (data.get('app_id') or '').strip()
-        raw_title = (data.get('title') or '').strip()
-
-        if "quickshell" in app_cls.lower() or "qs-master" in raw_title.lower() or "qs-master" in app_cls.lower():
-            return "Quickshell", "Quickshell"
-            
-        app_cls = app_cls if app_cls else "Unknown"
-        raw_title = raw_title if raw_title else app_cls
-        clean_name = resolve_app_name(app_cls, raw_title)
-        return app_cls, clean_name
-    except Exception:
-        return "Desktop", "Desktop"
-
 def is_locked():
     try:
         subprocess.check_output(['pgrep', '-x', 'hyprlock'])
@@ -171,23 +135,6 @@ def listen_hyprland_ipc():
                             current_app_class, current_app_title = cls, clean_title
         except Exception:
             time.sleep(2) 
-
-def listen_niri_ipc():
-    global current_app_class, current_app_title
-    while True:
-        try:
-            process = subprocess.Popen(['niri', 'msg', 'event-stream'], stdout=subprocess.PIPE, text=True)
-            for line in process.stdout:
-                if not line.strip(): continue
-                cls, clean_title = get_active_window_niri()
-                if is_locked():
-                    current_app_class, current_app_title = "Locked", "Locked"
-                else:
-                    current_app_class, current_app_title = cls, clean_title
-            process.wait()
-        except Exception:
-            pass
-        time.sleep(2)
 
 class DaemonTracker:
     def __init__(self):
@@ -446,15 +393,9 @@ def main():
     signal.signal(signal.SIGINT, exit_handler)
     signal.signal(signal.SIGTERM, exit_handler)
 
-    compositor = detect_compositor()
-    
-    if compositor == "niri":
-        current_app_class, current_app_title = get_active_window_niri()
-        ipc_thread = threading.Thread(target=listen_niri_ipc, daemon=True)
-    else:
-        current_app_class, current_app_title = get_active_window_hyprctl()
-        ipc_thread = threading.Thread(target=listen_hyprland_ipc, daemon=True)
-        
+    current_app_class, current_app_title = get_active_window_hyprctl()
+    ipc_thread = threading.Thread(target=listen_hyprland_ipc, daemon=True)
+
     ipc_thread.start()
 
     notified_overall = False

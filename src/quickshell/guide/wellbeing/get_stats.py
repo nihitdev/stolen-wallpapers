@@ -23,7 +23,7 @@ def main():
     target_date_str = args.date
     app_filter = args.app
     
-    db_dir = args.db_dir if args.db_dir else os.environ.get("QS_STATE_FOCUSTIME", os.path.expanduser("~/.local/state/quickshell/focustime"))
+    db_dir = args.db_dir if args.db_dir else os.environ.get("QS_STATE_FOCUSTIME", os.path.expanduser("~/.local/state/kairo/focustime"))
     db_path = os.path.join(db_dir, "focustime.db")
 
     old_db_dir = os.path.expanduser("~/.local/share/focustime")
