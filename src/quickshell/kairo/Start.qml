@@ -72,8 +72,8 @@ PanelWindow {
     property bool authorAbsolute: false
     property real finalAuthorOpacity: 0.0
 
-    property real toSerpReveal: 0.0
-    property real toSerpOpacity: 0.0
+    property real toKairoReveal: 0.0
+    property real toKairoOpacity: 0.0
 
     property real logoOpacity: 0.0
     property real logoScale: 0.94
@@ -160,7 +160,7 @@ PanelWindow {
         NumberAnimation { target: window; property: "welcomeReveal"; to: 1.0; duration: 850; easing.type: Easing.InOutSine }
         PauseAnimation { duration: 800 }
         NumberAnimation { target: window; property: "welcomeOpacity"; to: 0.0; duration: 400; easing.type: Easing.OutQuart }
-        ScriptAction { script: Sounds.playSfx("start/transition_serp.wav", 0.6) }
+        ScriptAction { script: Sounds.playSfx("start/transition_kairo.wav", 0.6) }
 
         ParallelAnimation {
             PropertyAction { target: window; property: "shellTextOpacity"; value: 1.0 }
@@ -180,7 +180,7 @@ PanelWindow {
             NumberAnimation { target: window; property: "shellTextOpacity"; to: 0.0; duration: 400; easing.type: Easing.OutQuart }
             NumberAnimation { target: window; property: "authorOpacity"; to: 0.0; duration: 400; easing.type: Easing.OutQuart }
         }
-        ScriptAction { script: Sounds.playSfx("start/transition_serp.wav", 0.6) }
+        ScriptAction { script: Sounds.playSfx("start/transition_kairo.wav", 0.6) }
 
         ParallelAnimation {
             SequentialAnimation {
@@ -194,8 +194,8 @@ PanelWindow {
 
                 ParallelAnimation {
                     ParallelAnimation {
-                        PropertyAction { target: window; property: "toSerpOpacity"; value: 1.0 }
-                        NumberAnimation { target: window; property: "toSerpReveal"; to: 1.0; duration: 1500; easing.type: Easing.InOutSine }
+                        PropertyAction { target: window; property: "toKairoOpacity"; value: 1.0 }
+                        NumberAnimation { target: window; property: "toKairoReveal"; to: 1.0; duration: 1500; easing.type: Easing.InOutSine }
                         NumberAnimation { target: window; property: "logoOpacity"; to: 1.0; duration: 1500; easing.type: Easing.OutQuart }
                         NumberAnimation { target: window; property: "logoScale"; from: 0.94; to: 1.0; duration: 1800; easing.type: Easing.OutExpo }
                     }
@@ -415,7 +415,7 @@ PanelWindow {
             Item {
                 id: finalMonitorContent
                 anchors.fill: parent
-                opacity: window.toSerpOpacity
+                opacity: window.toKairoOpacity
 
                 Item {
                     id: logoContainer
@@ -438,7 +438,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             width: window.s(360)
                             height: window.s(360)
-                            source: "file://" + Caching.serpantinumDir + "/assets/logo.svg"
+                            source: "file://" + Caching.kairoDir + "/assets/kairo-logo.svg"
                             sourceSize: Qt.size(width, height)
                             fillMode: Image.PreserveAspectFit
                             smooth: true
@@ -570,12 +570,12 @@ PanelWindow {
                 }
 
                 TypewriterText {
-                    id: serpText
+                    id: kairoText
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.verticalCenterOffset: window.s(120)
                     text: I18n.t("start.title")
-                    reveal: window.toSerpReveal
+                    reveal: window.toKairoReveal
                     color: window.colorizeActive ? window.mauve : window.text
                     font.family: ThemeBackend.fontFamily
                     font.weight: Font.Bold
@@ -586,9 +586,9 @@ PanelWindow {
                 Text {
                     id: finalAuthorText
                     anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: serpText.bottom
+                    anchors.top: kairoText.bottom
                     anchors.topMargin: window.s(12)
-                    text: I18n.t("start.made_by", { "author": "ilyamiro" })
+                    text: I18n.t("start.made_by", { "author": "nihitdev" })
                     font.family: ThemeBackend.fontFamily
                     font.pixelSize: window.s(15)
                     scale: 0.88
@@ -687,7 +687,7 @@ PanelWindow {
 
                     Text {
                         id: introAuthorText
-                        text: I18n.t("start.made_by", { "author": "ilyamiro" })
+                        text: I18n.t("start.made_by", { "author": "nihitdev" })
                         font.family: ThemeBackend.fontFamily
                         font.pixelSize: window.s(14)
                         color: window.subtext0
@@ -738,7 +738,7 @@ PanelWindow {
 
     SequentialAnimation {
         id: closeSequence
-        ScriptAction { script: Sounds.playSfx("start/transition_serp.wav", 0.6) }
+        ScriptAction { script: Sounds.playSfx("start/transition_kairo.wav", 0.6) }
         ScriptAction { script: window.exitSoundHandle = Sounds.playUntilStopped("start/exit.wav", 0.7, false) }
         PauseAnimation { duration: 350 }
         ParallelAnimation {
