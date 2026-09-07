@@ -4,30 +4,30 @@
 with lib;
 
 let
-  cfg = config.programs.serpantinum;
+  cfg = config.programs.kairo;
   system = pkgs.stdenv.hostPlatform.system;
 
   jsonFormat = pkgs.formats.json { };
   inherit (import ./settings-options.nix { inherit lib pkgs; }) settingsSubmodule;
 
-  templateSettings = builtins.fromJSON (builtins.readFile "${self}/config/serpantinum/settings.json");
+  templateSettings = builtins.fromJSON (builtins.readFile "${self}/config/kairo/settings.json");
 
   userSettings = lib.filterAttrsRecursive (_: v: v != null) cfg.settings;
 
   mergedSettings = lib.recursiveUpdate templateSettings userSettings;
-  settingsFile = jsonFormat.generate "serpantinum-settings.json" mergedSettings;
+  settingsFile = jsonFormat.generate "kairo-settings.json" mergedSettings;
 
-  settingsTarget = "${config.xdg.configHome}/serpantinum/settings.json";
+  settingsTarget = "${config.xdg.configHome}/kairo/settings.json";
 in
 {
-  options.programs.serpantinum = {
-    enable = mkEnableOption "the Serpantinum Quickshell desktop shell";
+  options.programs.kairo = {
+    enable = mkEnableOption "the Kairo Quickshell desktop shell";
 
     package = mkOption {
       type = types.package;
       default = self.packages.${system}.default;
-      defaultText = literalExpression "serpantinum.packages.<system>.default";
-      description = "The Serpantinum package to use.";
+      defaultText = literalExpression "kairo.packages.<system>.default";
+      description = "The Kairo package to use.";
     };
 
     settings = mkOption {
@@ -42,9 +42,9 @@ in
         }
       '';
       description = ''
-        Serpantinum configuration, layered on top of the package's
-        bundled `config/serpantinum/settings.json` and written to
-        `$XDG_CONFIG_HOME/serpantinum/settings.json`.
+        Kairo configuration, layered on top of the package's
+        bundled `config/kairo/settings.json` and written to
+        `$XDG_CONFIG_HOME/kairo/settings.json`.
         See settings-options.nix for the full list of typed fields;
         anything not listed there can still be set as a plain
         attribute.
@@ -55,20 +55,20 @@ in
       enable = mkOption {
         type = types.bool;
         default = pkgs.stdenv.isLinux;
-        description = "Whether to run serpantinumd as a `systemd --user` service.";
+        description = "Whether to run kairod as a `systemd --user` service.";
       };
 
       target = mkOption {
         type = types.str;
         default = "graphical-session.target";
-        description = "Target serpantinumd is tied to (start/stop/restart with it).";
+        description = "Target kairod is tied to (start/stop/restart with it).";
       };
 
       environment = mkOption {
         type = types.attrsOf types.str;
         default = { };
         example = { QT_QPA_PLATFORM = "wayland"; };
-        description = "Extra environment variables for the serpantinumd unit.";
+        description = "Extra environment variables for the kairod unit.";
       };
     };
   };
@@ -76,25 +76,25 @@ in
   config = mkIf cfg.enable {
     home.packages = [ cfg.package ];
 
-    programs.serpantinum.settings.wallpaperDir = mkDefault "${config.home.homeDirectory}/Pictures/Wallpapers";
+    programs.kairo.settings.wallpaperDir = mkDefault "${config.home.homeDirectory}/Pictures/Wallpapers";
 
-    home.activation.serpantinumSettings = hm.dag.entryAfter [ "writeBoundary" ] ''
+    home.activation.kairoSettings = hm.dag.entryAfter [ "writeBoundary" ] ''
       run mkdir -p ${escapeShellArg (builtins.dirOf settingsTarget)}
       if [ ! -e ${escapeShellArg settingsTarget} ]; then
         run install -m 0644 ${settingsFile} ${escapeShellArg settingsTarget}
       fi
     '';
 
-    systemd.user.services.serpantinum = mkIf cfg.systemd.enable {
+    systemd.user.services.kairo = mkIf cfg.systemd.enable {
       Unit = {
-        Description = "Serpantinum shell daemon";
+        Description = "Kairo shell daemon";
         After = [ cfg.systemd.target ];
         PartOf = [ cfg.systemd.target ];
         X-Restart-Triggers = [ "${settingsFile}" ];
       };
 
       Service = {
-        ExecStart = "${cfg.package}/bin/serpantinumd start";
+        ExecStart = "${cfg.package}/bin/kairod start";
         Restart = "on-failure";
         KillMode = "mixed";
         TimeoutStopSec = "5s";
