@@ -48,7 +48,7 @@ kairod start
 bin/                 CLI and daemon entrypoints
 config/kairo/        Default configuration
 install/             Installer
-nix/                 Nix packaging and modules
+
 src/assets/          Themes, translations and assets
 src/quickshell/      Quickshell/QML shell
 src/scripts/         Helper scripts

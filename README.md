@@ -398,13 +398,13 @@ kairo-shell/
 ├── install/
 │   ├── install.sh
 │   └── modules/
-├── nix/
+
 ├── src/
 │   ├── assets/
 │   ├── quickshell/
 │   └── scripts/
 ├── tests/
-├── flake.nix
+
 ├── LICENSE
 ├── README.md
 └── UPSTREAM.md
@@ -438,9 +438,9 @@ Contains themes, translations, sounds, icons, tutorial data, and other resources
 
 Contains regression tests used to protect the Kairo migration and project structure.
 
-### `nix/`
 
-Contains Nix packaging and module integration.
+
+
 
 ---
 
