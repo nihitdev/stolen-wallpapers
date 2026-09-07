@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+
+BIN_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+export KAIRO_DIR="${KAIRO_DIR:-$(dirname "$BIN_DIR")/src}"
+source "$KAIRO_DIR/scripts/caching.sh"
+source "$KAIRO_DIR/scripts/daemon_common.sh"
+
+show_help() {
+    cat <<'HELP'
+Kairo daemon — Hyprland shell service
+Usage: kairod [start|stop|status] [options]
+  start       Run the shell and focus tracker in the foreground (default)
+  stop        Stop this user's Kairo daemon and its children
+  status      Report whether the daemon is running
+  -v, --verbose  Print lifecycle messages
+  -V, --version  Print version
+  -h, --help     Show this help
+HELP
+}
+
+COMMAND=""
+VERBOSE=false
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help) show_help; exit 0 ;;
+        -V|--version) echo "Kairo daemon v$(get_installed_version)"; exit 0 ;;
+        -v|--verbose) VERBOSE=true; export KAIRO_VERBOSE=true ;;
+        start|stop|status)
+            if [ -n "$COMMAND" ]; then echo "Kairo: specify one daemon command." >&2; exit 1; fi
+            COMMAND="$arg" ;;
+        *) echo "Kairo: unknown daemon argument: $arg" >&2; show_help; exit 1 ;;
+    esac
+done
+COMMAND="${COMMAND:-start}"
+
+if [ "$COMMAND" = status ]; then
+    if pid=$(kairo_daemon_pid); then
+        echo "Kairo daemon is running (PID: $pid)."
+        exit 0
+    fi
+    echo "Kairo daemon is not running."
+    exit 1
+fi
+
+if [ "$COMMAND" = stop ]; then
+    if pid=$(kairo_daemon_pid); then
+        kill -TERM "$pid" 2>/dev/null || true
+        for ((i=0; i<50; i++)); do
+            kairo_pid_alive "$pid" || break
+            sleep 0.1
+        done
+        if kairo_pid_alive "$pid"; then
+            echo "Kairo: daemon did not stop within five seconds." >&2
+            exit 1
+        fi
+    fi
+    echo "Kairo daemon stopped."
+    exit 0
+fi
+
+if [ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+    echo "Kairo requires a running Hyprland session." >&2
+    exit 1
+fi
+command -v quickshell >/dev/null || { echo "Kairo: quickshell is required." >&2; exit 1; }
+command -v python3 >/dev/null || { echo "Kairo: python3 is required." >&2; exit 1; }
+[ -f "$MAIN_QML" ] || { echo "Kairo: missing shell entry point: $MAIN_QML" >&2; exit 1; }
+exec 9>"$KAIRO_LOCK_FILE"
+flock -n 9 || { echo "Kairo daemon is already running." >&2; exit 1; }
+printf '%s\n' "$$" > "$KAIRO_PID_FILE"
+
+cleanup() {
+    local result=$?
+    trap - EXIT INT TERM HUP
+    local children=() child
+    mapfile -t children < <(
+        for child in "${FOCUS_PID:-}" "${QS_PID:-}"; do
+            [ -n "$child" ] || continue
+            kairo_children "$child"
+            printf '%s\n' "$child"
+        done
+    )
+    for child in "${children[@]}"; do kill -TERM "$child" 2>/dev/null || true; done
+    for ((i=0; i<10; i++)); do
+        local alive=false
+        for child in "${children[@]}"; do kairo_pid_alive "$child" && alive=true; done
+        [ "$alive" = true ] || break
+        sleep 0.1
+    done
+    for child in "${children[@]}"; do kill -KILL "$child" 2>/dev/null || true; done
+    wait 2>/dev/null || true
+    rm -f "$KAIRO_PID_FILE"
+    # Keep the lock inode: deleting it would allow two simultaneous locks.
+    exec 9>&-
+    [ "$VERBOSE" = true ] && echo "Kairo daemon stopped."
+    exit "$result"
+}
+trap cleanup EXIT
+trap 'exit 0' INT TERM HUP
+[ "$VERBOSE" = true ] && echo "Starting Kairo on Hyprland."
+bash "$KAIRO_DIR/quickshell/guide/wellbeing/launch_daemon.sh" 9>&- &
+FOCUS_PID=$!
+quickshell -p "$MAIN_QML" 9>&- &
+QS_PID=$!
+wait "$QS_PID"
