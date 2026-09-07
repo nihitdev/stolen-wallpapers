@@ -166,14 +166,6 @@ Variants {
                         barWindow.pendingReload = true
                     }
                 }
-                function toggleUpdate() {
-                    let target = null;
-                    if (barWindow.isVertical) target = verticalWrapper.getWidget("left");
-                    else target = contentWrapper.getWidget("left");
-                    if (target && typeof target.toggleUpdate === "function") {
-                        target.toggleUpdate();
-                    }
-                }
                 function getWidgetGeometry(widgetName: string): void {
                     let target = null;
                     if (barWindow.isVertical) target = verticalWrapper.getWidget(widgetName);
