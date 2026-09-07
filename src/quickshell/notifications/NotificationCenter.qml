@@ -55,7 +55,7 @@ Item {
         }
         ScriptAction { 
             script: {
-                Quickshell.execDetached(["bash", Caching.serpantinumDir + "/scripts/qs_manager.sh", "close"]);
+                Quickshell.execDetached(["bash", Caching.kairoDir + "/scripts/qs_manager.sh", "close"]);
             } 
         }    
     }
